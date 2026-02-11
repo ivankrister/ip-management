@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\GatewayController;
+use App\Services\AuthServiceClient;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class AuthController extends GatewayController
+{
+    public function __construct(
+        private AuthServiceClient $authService
+    ) {}
+
+    /**
+     * Login user
+     */
+    public function login(Request $request): JsonResponse
+    {
+
+        return $this->proxyRequest(function () {
+            return $this->authService->login($this->getRequestData());
+        });
+    }
+}
