@@ -1,10 +1,10 @@
 version: '3.8'
 
 services:
-  # MySQL Database for Auth Service
-  mysql-auth:
+  # MySQL Database - Only for Auth Service
+  mysql:
     image: mysql:8.0
-    container_name: ip-management-mysql-auth
+    container_name: ip-management-mysql
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: auth_service
@@ -12,54 +12,14 @@ services:
       MYSQL_USER: laravel
       MYSQL_PASSWORD: laravel
     ports:
-      - "3307:3306"
-    volumes:
-      - mysql_auth_data:/var/lib/mysql
-    networks:
-      - ip-management-network
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # MySQL Database for Gateway Service
-  mysql-gateway:
-    image: mysql:8.0
-    container_name: ip-management-mysql-gateway
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: gateway_service
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: laravel
-    ports:
       - "3308:3306"
     volumes:
-      - mysql_gateway_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
       - ip-management-network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: ip-management-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - ip-management-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,8 +27,10 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./auth-service
-      dockerfile: ../docker/Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE_DIR: auth-service
     container_name: ip-management-auth-service
     restart: unless-stopped
     ports:
@@ -79,33 +41,28 @@ services:
       APP_DEBUG: "true"
       APP_URL: http://localhost:8001
       DB_CONNECTION: mysql
-      DB_HOST: mysql-auth
+      DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: auth_service
       DB_USERNAME: laravel
       DB_PASSWORD: laravel
-      CACHE_DRIVER: redis
-      QUEUE_CONNECTION: redis
-      SESSION_DRIVER: redis
-      REDIS_HOST: redis
-      REDIS_PASSWORD: null
-      REDIS_PORT: 6379
+      CACHE_DRIVER: file
+      SESSION_DRIVER: file
     volumes:
       - ./auth-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
-      mysql-auth:
-        condition: service_healthy
-      redis:
+      mysql:
         condition: service_healthy
     networks:
       - ip-management-network
 
-  # Gateway Service
   gateway-service:
     build:
-      context: ./gateway-service
-      dockerfile: ../docker/Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE_DIR: gateway-service
     container_name: ip-management-gateway-service
     restart: unless-stopped
     ports:
@@ -115,27 +72,13 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost:8002
-      DB_CONNECTION: mysql
-      DB_HOST: mysql-gateway
-      DB_PORT: 3306
-      DB_DATABASE: gateway_service
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
-      CACHE_DRIVER: redis
-      QUEUE_CONNECTION: redis
-      SESSION_DRIVER: redis
-      REDIS_HOST: redis
-      REDIS_PASSWORD: null
-      REDIS_PORT: 6379
+      CACHE_DRIVER: file
+      SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
     volumes:
       - ./gateway-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
-      mysql-gateway:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
       auth-service:
         condition: service_started
     networks:
@@ -146,9 +89,5 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_auth_data:
-    driver: local
-  mysql_gateway_data:
-    driver: local
-  redis_data:
+  mysql_data:
     driver: local
