@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginAction
 {
-    public function handle(array $data): User
+    public function handle(array $data): array
     {
         $user = User::where('email', $data['email'])->first();
 
@@ -15,6 +15,13 @@ class LoginAction
             throw new \Exception('Invalid credentials');
         }
 
-        return $user;
+        $token = auth()->login($user);
+
+        return [
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'user' => $user,
+        ];
     }
 }
