@@ -28,6 +28,15 @@ final class IpAddressResource extends JsonResource
                 'updatedAt' => $this->updated_at->format('Y-m-d H:i:s'),
             ],
             'relationships' => [
+                'createdBy' => [
+                    'data' => [
+                        'type' => 'user',
+                        'id' => (string) $this->created_by,
+                    ],
+                ],
+            ],
+            'included' => [
+                'createdBy' => $this->metadata['user'] ?? null,
             ],
             'links' => [
                 'self' => route('ip-addresses.show', ['ip_address' => $this->id]),
