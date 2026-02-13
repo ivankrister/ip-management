@@ -32,11 +32,11 @@ final class JWTStateless
             $user->exists = true; // Mark as existing to prevent save attempts
 
             // Set the authenticated user for both request()->user() and auth()->user()
-            $request->setUserResolver(fn () => $user);
+            $request->setUserResolver(fn (): User => $user);
             Auth::shouldUse('api');
             Auth::setUser($user);
 
-        } catch (JWTException $e) {
+        } catch (JWTException) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 

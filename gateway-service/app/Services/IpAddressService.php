@@ -23,8 +23,8 @@ final class IpAddressService extends ServiceClient
     /**
      * Test authentication with IP service
      */
-    public function test(): Response
+    public function index(): Response
     {
-        return $this->get('api/v1/test');
+        return $this->get('api/v1/ip-addresses');
     }
 }

@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\V1;
 
+use App\Http\Resources\IpAddressResource;
 use App\Models\IpAddress;
+use Spatie\QueryBuilder\QueryBuilder;
 
 final class IpAddressController
 {
-    public function index() {}
+    public function index()
+    {
+        $ipAddresses = QueryBuilder::for(IpAddress::class)
+            ->allowedFilters(['value', 'label', 'created_by'])
+            ->allowedSorts(['id', 'value', 'label', 'created_by', 'created_at'])
+            ->paginate()
+            ->appends(request()->query());
 
-    public function show(IpAddress $ipAddress) {}
-
-    public function store() {}
-
-    public function update(IpAddress $ipAddress) {}
-
-    public function destroy(IpAddress $ipAddress) {}
+        return IpAddressResource::collection($ipAddresses);
+    }
 }

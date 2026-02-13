@@ -14,10 +14,10 @@ final class IpAddressController extends GatewayController
     /**
      * Test authentication with IP service
      */
-    public function test(IpAddressService $ipService, Request $request): JsonResponse
+    public function index(IpAddressService $ipService, Request $request): JsonResponse
     {
         return $this->proxyRequest(function () use ($ipService) {
-            return $ipService->test();
+            return $ipService->index();
         });
     }
 }

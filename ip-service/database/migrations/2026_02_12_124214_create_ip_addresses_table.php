@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('label');
             $table->text('comment')->nullable();
             $table->unsignedBigInteger('created_by');
+            $table->json('metadata')->nullable();
             $table->timestamps();
-
             $table->index('created_by');
             $table->index('value');
         });
