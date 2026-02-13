@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -36,6 +38,9 @@ return [
     ],
     'auth' => [
         'url' => env('AUTH_SERVICE_URL'),
+    ],
+    'ip' => [
+        'url' => env('IP_SERVICE_URL'),
     ],
 
 ];
