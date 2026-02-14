@@ -47,6 +47,11 @@ final class IpAddressController
 
     public function destroy(DeleteIpAddressAction $action, IpAddress $ipAddress): bool
     {
+
+        if ($ipAddress->created_by !== auth()->id() && auth()->user()->type !== 'super_admin') {
+            abort(403, 'Unauthorized');
+        }
+
         return $action->handle($ipAddress);
     }
 }

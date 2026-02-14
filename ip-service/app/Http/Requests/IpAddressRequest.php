@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class IpAddressRequest extends FormRequest
 {
@@ -13,7 +14,17 @@ final class IpAddressRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        if ($this->user()->type === 'super_admin') {
+            return true;
+        }
+        if ($this->route()->getName() === 'ip-addresses.update') {
+            $ipAddress = $this->route('ip_address');
+            if ($ipAddress && $ipAddress->created_by === $this->user()->id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -24,7 +35,7 @@ final class IpAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'data.attributes.value' => ['required', 'ip', 'max:45', 'unique:ip_addresses,value'],
+            'data.attributes.value' => ['required', 'ip', 'max:45', Rule::unique('ip_addresses', 'value')->ignore($this->route('ip_address'))],
             'data.attributes.label' => ['required', 'string', 'min:1', 'max:50'],
             'data.attributes.comment' => ['nullable', 'string'],
         ];

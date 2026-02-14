@@ -370,6 +370,47 @@ describe('IpAddressController', function () {
 
             $response->assertStatus(404);
         });
+
+        it('can update all ip address if the user is a super admin', function () {
+
+            $ipAddress = IpAddress::factory()->create(['created_by' => 2]);
+            $data = [
+                'data' => [
+                    'attributes' => [
+                        'value' => '192.168.1.101',
+                        'label' => 'Updated Server',
+                    ],
+                ],
+            ];
+            $response = putJson("/api/v1/ip-addresses/{$ipAddress->id}", $data);
+            $response->assertStatus(200);
+        });
+
+        it('can only update his own IP address if the user is not a super admin', function () {
+            $user1 = new User;
+            $user1->id = 1;
+            $user1->type = 'user';
+            $user2 = new User;
+            $user2->id = 2;
+            $user2->type = 'user';
+
+            $ipAddress = IpAddress::factory()->create(['created_by' => $user1->id]);
+
+            actingAs($user2);
+            $data = [
+                'data' => [
+                    'attributes' => [
+                        'value' => '192.168.1.101',
+                        'label' => 'Updated Server',
+                    ],
+                ],
+            ];
+            $response = putJson("/api/v1/ip-addresses/{$ipAddress->id}", $data);
+            $response->assertStatus(403);
+            actingAs($user1);
+            $response = putJson("/api/v1/ip-addresses/{$ipAddress->id}", $data);
+            $response->assertStatus(200);
+        });
     });
 
     describe('destroy', function () {
@@ -389,6 +430,29 @@ describe('IpAddressController', function () {
             $response = deleteJson('/api/v1/ip-addresses/999999');
 
             $response->assertStatus(404);
+        });
+
+        it('can delete all ip address if the user is a super admin', function () {
+            $ipAddress = IpAddress::factory()->create(['created_by' => 2]);
+            $response = deleteJson("/api/v1/ip-addresses/{$ipAddress->id}");
+            $response->assertStatus(200);
+        });
+        it('can only delete his own IP address if the user is not a super admin', function () {
+            $user1 = new User;
+            $user1->id = 1;
+            $user1->type = 'user';
+            $user2 = new User;
+            $user2->id = 2;
+            $user2->type = 'user';
+
+            $ipAddress = IpAddress::factory()->create(['created_by' => $user1->id]);
+
+            actingAs($user2);
+            $response = deleteJson("/api/v1/ip-addresses/{$ipAddress->id}");
+            $response->assertStatus(403);
+            actingAs($user1);
+            $response = deleteJson("/api/v1/ip-addresses/{$ipAddress->id}");
+            $response->assertStatus(200);
         });
     });
 });
