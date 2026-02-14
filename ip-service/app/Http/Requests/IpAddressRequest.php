@@ -29,4 +29,32 @@ final class IpAddressRequest extends FormRequest
             'data.attributes.comment' => ['nullable', 'string'],
         ];
     }
+
+    public function storeData(): array
+    {
+
+        return [
+            'value' => $this->input('data.attributes.value'),
+            'label' => $this->input('data.attributes.label'),
+            'comment' => $this->input('data.attributes.comment'),
+            'created_by' => $this->user()->id,
+            'metadata' => [
+                'user' => [
+                    'id' => (string) $this->user()->id,
+                    'name' => $this->user()->name,
+                    'email' => $this->user()->email,
+                    'type' => $this->user()->type,
+                ],
+            ],
+        ];
+    }
+
+    public function updateData(): array
+    {
+        return [
+            'value' => $this->input('data.attributes.value'),
+            'label' => $this->input('data.attributes.label'),
+            'comment' => $this->input('data.attributes.comment'),
+        ];
+    }
 }

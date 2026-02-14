@@ -33,14 +33,14 @@ final class IpAddressController
 
     public function store(IpAddressRequest $request, CreateIpAddressAction $action): IpAddressResource
     {
-        $ipAddress = $action->handle($request->validated());
+        $ipAddress = $action->handle($request->storeData());
 
         return IpAddressResource::make($ipAddress);
     }
 
     public function update(IpAddressRequest $request, UpdateIpAddressAction $action, IpAddress $ipAddress): IpAddressResource
     {
-        $action->handle($ipAddress, $request->validated());
+        $action->handle($ipAddress, $request->updateData());
 
         return IpAddressResource::make($ipAddress);
     }
