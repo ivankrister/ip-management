@@ -50,6 +50,8 @@ services:
     volumes:
       - ./auth-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
       mysql:
         condition: service_healthy
@@ -77,6 +79,8 @@ services:
     volumes:
       - ./gateway-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
       auth-service:
         condition: service_started
@@ -108,6 +112,8 @@ services:
       SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
     volumes:
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       - ./ip-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:

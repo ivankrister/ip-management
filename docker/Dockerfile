@@ -20,6 +20,7 @@ RUN apk add --no-cache \
     postgresql-dev \
     mysql-dev \
     linux-headers \
+    $PHPIZE_DEPS \
     && docker-php-ext-install \
     pdo \
     pdo_mysql \
@@ -31,6 +32,24 @@ RUN apk add --no-cache \
     bcmath \
     gd \
     opcache
+
+# Install Xdebug from source (compatible with PHP 8.4)
+RUN apk add --no-cache --virtual .build-deps autoconf g++ make \
+    && cd /tmp \
+    && git clone --depth 1 --branch master https://github.com/xdebug/xdebug.git \
+    && cd xdebug \
+    && phpize \
+    && ./configure \
+    && make \
+    && make install \
+    && docker-php-ext-enable xdebug \
+    && cd / \
+    && rm -rf /tmp/xdebug \
+    && apk del .build-deps
+
+# Copy PHP configuration
+COPY docker/php/php.ini /usr/local/etc/php/php.ini
+COPY docker/php/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
