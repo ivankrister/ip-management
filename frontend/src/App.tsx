@@ -1,8 +1,8 @@
-import { ComponentExample } from "@/components/component-example";
-import Login from "./pages/auth/Login";
+import { RouterProvider } from "react-router-dom";
+import { router } from "@/router";
 
 export function App() {
-return <Login />;
+  return <RouterProvider router={router} />;
 }
 
 export default App;
