@@ -60,9 +60,7 @@ const data = {
       ),
     }  
   ],
-  documents: [
-    
-  ],
+  
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

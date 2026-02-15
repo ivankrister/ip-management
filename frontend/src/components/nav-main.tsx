@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -6,7 +5,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { RiAddCircleFill, RiMailLine } from "@remixicon/react"
+import { Link, useLocation } from "react-router-dom"
 
 export function NavMain({
   items,
@@ -17,15 +16,23 @@ export function NavMain({
     icon?: React.ReactNode
   }[]
 }) {
+  const location = useLocation();
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon}
-                <span>{item.title}</span>
+              <SidebarMenuButton 
+                tooltip={item.title} 
+                asChild
+                isActive={location.pathname === item.url}
+              >
+                <Link to={item.url}>
+                  {item.icon}
+                  <span>{item.title}</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
