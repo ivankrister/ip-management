@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Link } from "react-router-dom"
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
@@ -24,7 +25,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: (
         <RiDashboardLine
         />
@@ -32,7 +33,7 @@ const data = {
     },
     {
       title: "IP Address Management",
-      url: "#",
+      url: "/ip-management",
       icon: (
         <RiFolderLine
         />
@@ -40,7 +41,7 @@ const data = {
     },
     {
       title: "Audit Logs",
-      url: "#",
+      url: "/audit-logs",
       icon: (
         <RiBarChartLine
         />
@@ -52,7 +53,7 @@ const data = {
   navSecondary: [
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: (
         <RiSettingsLine
         />
@@ -74,10 +75,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="#">
+              <Link to="/dashboard">
                 <RiCommandLine className="size-5!" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+                <span className="text-base font-semibold">IP Management System</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

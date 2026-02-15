@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import Login from "@/pages/auth/Login";
 import MainLayout from "@/layouts/MainLayout";
 import AuthLayout from "@/layouts/AuthLayout";
+import Dashboard from "@/pages/Dashboard";
 
 export const router = createBrowserRouter([
   {
@@ -28,9 +29,24 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <div>Dashboard Page</div>, // Replace with your Dashboard component
+        element: <Dashboard />,
+        handle: { title: "Dashboard" },
       },
-      // Add more routes here as needed
+      {
+        path: "ip-management",
+        element: <div>IP Management Page</div>,
+        handle: { title: "IP Address Management" },
+      },
+      {
+        path: "audit-logs",
+        element: <div>Audit Logs Page</div>,
+        handle: { title: "Audit Logs" },
+      },
+      {
+        path: "settings",
+        element: <div>Settings Page</div>,
+        handle: { title: "Settings" },
+      },
     ],
   },
   {
