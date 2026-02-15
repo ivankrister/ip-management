@@ -1,29 +1,25 @@
 services:
-  # MySQL Database - Only for Auth Service
   mysql:
     image: mysql:8.0
     container_name: ip-management-mysql
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_DATABASE: auth_service
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: laravel
-    ports:
-      - "3308:3306"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - ./docker/mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
       - ./docker/mysql-init:/docker-entrypoint-initdb.d
     networks:
       - ip-management-network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Auth Service
   auth-service:
     build:
       context: .
@@ -31,27 +27,24 @@ services:
       args:
         SERVICE_DIR: auth-service
     container_name: ip-management-auth-service
-    restart: unless-stopped
-    ports:
-      - "8001:80"
+    restart: always
     environment:
       APP_NAME: "Auth Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8001
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${AUTH_SERVICE_URL}
+      APP_KEY: ${AUTH_SERVICE_KEY}
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: auth_service
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
       CACHE_DRIVER: file
       SESSION_DRIVER: file
     volumes:
       - ./auth-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
-      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
-      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
       mysql:
         condition: service_healthy
@@ -65,25 +58,21 @@ services:
       args:
         SERVICE_DIR: gateway-service
     container_name: ip-management-gateway-service
-    restart: unless-stopped
-    ports:
-      - "8002:80"
+    restart: always
     environment:
       APP_NAME: "Gateway Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8002
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${GATEWAY_SERVICE_URL}
+      APP_KEY: ${GATEWAY_SERVICE_KEY}
       CACHE_DRIVER: file
       SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
     volumes:
       - ./gateway-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
-      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
-      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
-      auth-service:
-        condition: service_started
+      - auth-service
     networks:
       - ip-management-network
 
@@ -94,26 +83,23 @@ services:
       args:
         SERVICE_DIR: ip-service
     container_name: ip-management-ip-service
-    restart: unless-stopped
-    ports:
-      - "8003:80"
+    restart: always
     environment:
       APP_NAME: "IP Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8003
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${IP_SERVICE_URL}
+      APP_KEY: ${IP_SERVICE_KEY}
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: ip_service
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
       CACHE_DRIVER: file
       SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
     volumes:
-      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
-      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       - ./ip-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
@@ -125,18 +111,28 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
+      dockerfile: ../docker/Dockerfile.frontend.prod
     container_name: ip-management-frontend
-    restart: unless-stopped
-    ports:
-      - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:8002
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    restart: always
     networks:
       - ip-management-network
+
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: ip-management-nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/proxy.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - gateway-service
+    networks:
+      - ip-management-network
+
+volumes:
+  mysql-data:
 
 networks:
   ip-management-network:
