@@ -15,6 +15,7 @@ export class AuthService {
       return response;
     } catch (error) {
       // Re-throw error to be handled by the caller
+
       throw error;
     }
   }

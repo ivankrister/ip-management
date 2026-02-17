@@ -31,9 +31,21 @@ export function LoginForm({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    await onSubmit(email, password)
+    e.stopPropagation()
+    
+    // Ensure we don't proceed if already loading
+    if (isLoading) {
+      return false
+    }
+    
+    // Call onSubmit - errors are handled by parent
+    onSubmit(email, password).catch(() => {
+      // Parent component handles the error display
+    })
+    
+    return false
   }
 
   return (
