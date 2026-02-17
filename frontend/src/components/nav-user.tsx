@@ -76,24 +76,6 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <RiUserLine
-                />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <RiBankCardLine
-                />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <RiNotification3Line
-                />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
             <DropdownMenuItem>
               <RiLogoutBoxLine
               />

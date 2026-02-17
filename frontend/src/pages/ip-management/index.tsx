@@ -173,9 +173,13 @@ export default function IpManagementIndexPage() {
       accessorKey: "attributes.comment",
       header: "Comment",
       cell: ({ row }) => {
+
+        
         const comment = row.original.attributes.comment
         return comment ? (
-          <span className="text-sm">{comment}</span>
+          <div className="text-sm line-clamp-2 max-w-xs " title={comment}>
+            {comment}
+          </div>
         ) : (
           <span className="text-muted-foreground text-sm">—</span>
         )
@@ -272,7 +276,7 @@ export default function IpManagementIndexPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">IP Address Management</h1>
           <p className="text-muted-foreground">
-            Manage and track your IP address inventory
+            Manage and track your IP address
           </p>
         </div>
         <div className="flex gap-2">
