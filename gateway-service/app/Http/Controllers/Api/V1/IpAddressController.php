@@ -16,8 +16,8 @@ final class IpAddressController extends GatewayController
      */
     public function index(IpAddressService $ipService, Request $request): JsonResponse
     {
-        return $this->proxyRequest(function () use ($ipService) {
-            return $ipService->index();
+        return $this->proxyRequest(function () use ($ipService, $request) {
+            return $ipService->index($request->query());
         });
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Requests\IpAddressRequest;
 use App\Http\Resources\IpAddressResource;
 use App\Models\IpAddress;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 final class IpAddressController
@@ -18,7 +19,15 @@ final class IpAddressController
     public function index(): AnonymousResourceCollection
     {
         $ipAddresses = QueryBuilder::for(IpAddress::class)
-            ->allowedFilters(['value', 'label', 'created_by'])
+            ->allowedFilters([
+                AllowedFilter::exact('created_by'),
+                AllowedFilter::callback('search', function ($query, $value) {
+                    $query->where(function ($q) use ($value) {
+                        $q->where('value', 'like', "%{$value}%")
+                            ->orWhere('label', 'like', "%{$value}%");
+                    });
+                }),
+            ])
             ->allowedSorts(['id', 'value', 'label', 'created_by', 'created_at'])
             ->paginate()
             ->appends(request()->query());

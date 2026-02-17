@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, Plus, Search, RefreshCw, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Plus, Search, RefreshCw, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import axios from "axios"
 import { ipAddressService } from "@/services/ip-address.service"
 
@@ -40,15 +40,19 @@ export default function IpManagementIndexPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
+  const [sortBy, setSortBy] = useState<string>("createdAt")
+  const [sortOrder, setSortOrder] = useState<'-' | ''>("-")
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
       setError(null)
       try {
+        const sortParam = `${sortOrder}${sortBy}`
         const result = await ipAddressService.getAll({ 
           search: searchQuery,
-          page: currentPage 
+          page: currentPage,
+          sort: sortParam
         })
         
         if (result.data && Array.isArray(result.data)) {
@@ -71,10 +75,31 @@ export default function IpManagementIndexPage() {
     }
 
     fetchData()
-  }, [searchQuery, refreshKey, currentPage])
+  }, [searchQuery, refreshKey, currentPage, sortBy, sortOrder])
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1)
+  }
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // Toggle sort order if same column
+      setSortOrder(sortOrder === '' ? '-' : '')
+    } else {
+      // Set new column and default to ascending
+      setSortBy(column)
+      setSortOrder('')
+    }
+    setCurrentPage(1) // Reset to first page when sorting changes
+  }
+
+  const getSortIcon = (column: string) => {
+    if (sortBy !== column) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />
+    }
+    return sortOrder === '' ? 
+      <ArrowUp className="ml-2 h-4 w-4" /> : 
+      <ArrowDown className="ml-2 h-4 w-4" />
   }
 
   const handlePageChange = (page: number) => {
@@ -122,7 +147,16 @@ export default function IpManagementIndexPage() {
   const columns: ColumnDef<IpAddressResource>[] = [
     {
       accessorKey: "attributes.value",
-      header: "IP Address",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => handleSort('value')}
+          className="h-8 px-2 hover:bg-transparent"
+        >
+          IP Address
+          {getSortIcon('value')}
+        </Button>
+      ),
       cell: ({ row }) => {
         const value = row.original.attributes.value
         return <span className="font-mono font-medium">{value}</span>
@@ -130,7 +164,16 @@ export default function IpManagementIndexPage() {
     },
     {
       accessorKey: "attributes.label",
-      header: "Label",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => handleSort('label')}
+          className="h-8 px-2 hover:bg-transparent"
+        >
+          Label
+          {getSortIcon('label')}
+        </Button>
+      ),
       cell: ({ row }) => {
         const label = row.original.attributes.label
         return label ? (
@@ -166,7 +209,16 @@ export default function IpManagementIndexPage() {
     },
     {
       accessorKey: "attributes.createdAt",
-      header: "Created At",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => handleSort('created_at')}
+          className="h-8 px-2 hover:bg-transparent"
+        >
+          Created At
+          {getSortIcon('created_at')}
+        </Button>
+      ),
       cell: ({ row }) => {
         const date = row.original.attributes.createdAt
         return (
