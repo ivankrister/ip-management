@@ -26,9 +26,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { IpAddressResource } from '@/types';
+import { CreateIpAddressForm } from './create'
 
 export default function IpManagementIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
@@ -56,6 +64,7 @@ export default function IpManagementIndexPage() {
   })
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [selectedIp, setSelectedIp] = useState<IpAddressResource | null>(null)
 
   const getSortIcon = (column: string) => {
@@ -66,6 +75,11 @@ export default function IpManagementIndexPage() {
     return state === 'asc' ? 
       <ArrowUp className="ml-2 h-4 w-4" /> : 
       <ArrowDown className="ml-2 h-4 w-4" />
+  }
+
+  const handleCreateSuccess = () => {
+    setCreateDialogOpen(false)
+    handleRefresh()
   }
 
   const handleEdit = (ip: IpAddressResource) => {
@@ -228,7 +242,7 @@ export default function IpManagementIndexPage() {
           <Button variant="outline" size="icon" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add IP Address
           </Button>
@@ -323,6 +337,21 @@ export default function IpManagementIndexPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add IP Address</DialogTitle>
+            <DialogDescription>
+              Create a new IP address entry in your inventory.
+            </DialogDescription>
+          </DialogHeader>
+          <CreateIpAddressForm
+            onSuccess={handleCreateSuccess}
+            onCancel={() => setCreateDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

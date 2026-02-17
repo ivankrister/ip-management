@@ -13,18 +13,19 @@ final class IpAddressService extends ServiceClient
     {
         parent::__construct(config('services.ip.url'));
 
-        // Set bearer token from request for all requests
         $token = $request->bearerToken();
         if ($token) {
             $this->defaultHeaders['Authorization'] = 'Bearer '.$token;
         }
     }
 
-    /**
-     * Test authentication with IP service
-     */
     public function index(array $queryParams = []): Response
     {
         return $this->get('api/v1/ip-addresses', $queryParams);
+    }
+
+    public function store(array $data): Response
+    {
+        return $this->post('api/v1/ip-addresses', $data);
     }
 }

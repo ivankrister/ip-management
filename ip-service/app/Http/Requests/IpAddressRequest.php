@@ -14,6 +14,11 @@ final class IpAddressRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        info('Authorizing request', [
+            'user_id' => $this->user()->id,
+            'user_type' => $this->user()->type,
+            'route_name' => $this->route()->getName(),
+        ]);
         if ($this->user()->type === 'super_admin') {
             return true;
         }

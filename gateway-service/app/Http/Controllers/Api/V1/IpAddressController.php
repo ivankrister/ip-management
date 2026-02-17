@@ -11,13 +11,17 @@ use Illuminate\Http\Request;
 
 final class IpAddressController extends GatewayController
 {
-    /**
-     * Test authentication with IP service
-     */
     public function index(IpAddressService $ipService, Request $request): JsonResponse
     {
         return $this->proxyRequest(function () use ($ipService, $request) {
             return $ipService->index($request->query());
+        });
+    }
+
+    public function store(IpAddressService $ipService, Request $request): JsonResponse
+    {
+        return $this->proxyRequest(function () use ($ipService, $request) {
+            return $ipService->store($request->all());
         });
     }
 }
