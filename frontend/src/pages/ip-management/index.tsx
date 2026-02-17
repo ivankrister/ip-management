@@ -46,14 +46,16 @@ export default function IpManagementIndexPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const result = await ipAddressService.getAll({ search: searchQuery })
+        const result = await ipAddressService.getAll({ 
+          search: searchQuery,
+          page: currentPage 
+        })
         
         if (result.data && Array.isArray(result.data)) {
           setData(result.data)
           
           if (result.meta) {
             setTotalCount(result.meta.total)
-            setCurrentPage(result.meta.current_page)
             setLastPage(result.meta.last_page)
           }
         }
@@ -69,10 +71,26 @@ export default function IpManagementIndexPage() {
     }
 
     fetchData()
-  }, [searchQuery, refreshKey])
+  }, [searchQuery, refreshKey, currentPage])
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < lastPage) {
+      setCurrentPage(currentPage + 1)
+    }
   }
 
   const handleEdit = (ip: IpAddressResource) => {
@@ -237,7 +255,10 @@ export default function IpManagementIndexPage() {
               <Input
                 placeholder="Search IP addresses..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1)
+                }}
                 className="pl-8"
               />
             </div>
@@ -250,6 +271,58 @@ export default function IpManagementIndexPage() {
             isLoading={isLoading}
             error={error}
           />
+          
+          {!isLoading && !error && lastPage > 1 && (
+            <div className="flex items-center justify-between px-2 py-4">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} of {lastPage}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, lastPage) }, (_, i) => {
+                    let pageNum: number
+                    if (lastPage <= 5) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1
+                    } else if (currentPage >= lastPage - 2) {
+                      pageNum = lastPage - 4 + i
+                    } else {
+                      pageNum = currentPage - 2 + i
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className="w-9"
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === lastPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
