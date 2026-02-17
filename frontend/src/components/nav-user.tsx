@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { RiMore2Line, RiUserLine, RiBankCardLine, RiNotification3Line, RiLogoutBoxLine } from "@remixicon/react"
+import { useInitials } from "@/hooks/use-initials"
 
 export function NavUser({
   user,
@@ -30,6 +31,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const getInitials = useInitials(); 
 
   return (
     <SidebarMenu>
@@ -42,7 +44,7 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>

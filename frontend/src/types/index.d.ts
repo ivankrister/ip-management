@@ -57,12 +57,7 @@ export interface IpAddressResource {
     }
   }
   included?: {
-    createdBy: {
-      id: number
-      name: string
-      email: string
-      user_type: string
-    }
+    createdBy: User
   }
   links?: {
     self: string
@@ -72,5 +67,6 @@ export interface IpAddressResource {
 export interface User {
   name: string
   email: string
+  type: string
 }
 

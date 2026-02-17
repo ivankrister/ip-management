@@ -39,9 +39,12 @@ import type { IpAddressResource } from '@/types';
 import { CreateIpAddressForm } from './create'
 import { EditIpAddressForm } from './edit'
 import { IpAddressDetail } from './show'
+import { useAuth } from "@/hooks/use-auth"
 
 export default function IpManagementIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
+
+  const { user } = useAuth()
 
   const {
     data,
@@ -64,6 +67,7 @@ export default function IpManagementIndexPage() {
     defaultSortOrder: '-',
     filters: activeTab === 'me' ? { 'filter[created_by]': 'me' } : {},
   })
+
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -219,7 +223,13 @@ export default function IpManagementIndexPage() {
     {
       id: "actions",
       cell: ({ row }) => {
+        
         const ip = row.original
+
+
+        if(user.type !== 'super_admin' && user.id !== ip.attributes.created_by) {
+          return null
+        }
 
         return (
           <DropdownMenu>
@@ -232,12 +242,18 @@ export default function IpManagementIndexPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleEdit(ip)}>
+              <DropdownMenuItem onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                  event.stopPropagation()
+                  handleEdit(ip)
+              }}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleDelete(ip)}
+                onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                  event.stopPropagation()
+                  handleDelete(ip)
+                }}
                 className="text-destructive"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
