@@ -20,7 +20,17 @@ final class IpAddressController
     {
         $ipAddresses = QueryBuilder::for(IpAddress::class)
             ->allowedFilters([
-                AllowedFilter::exact('created_by'),
+                AllowedFilter::callback('created_by', function ($query, $value) {
+                    if ($value === 'all') {
+                        return;
+                    }
+                    if ($value === 'me') {
+                        $query->where('created_by', auth()->id());
+
+                        return;
+                    }
+
+                }),
                 AllowedFilter::callback('search', function ($query, $value) {
                     $query->where(function ($q) use ($value) {
                         $q->where('value', 'like', "%{$value}%")
@@ -29,7 +39,7 @@ final class IpAddressController
                 }),
             ])
             ->allowedSorts(['id', 'value', 'label', 'created_by', 'created_at'])
-            ->paginate()
+            ->paginate(10)
             ->appends(request()->query());
 
         return IpAddressResource::collection($ipAddresses);

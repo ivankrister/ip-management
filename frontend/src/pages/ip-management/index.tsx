@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal, Plus, Search, RefreshCw, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
-import axios from "axios"
 import { ipAddressService } from "@/services/ip-address.service"
+import { useDataTable } from "@/hooks/useDataTable"
 
 import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
@@ -27,95 +27,45 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { IpAddressResource } from '@/types';
 
 export default function IpManagementIndexPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
+
+  const {
+    data,
+    isLoading,
+    error,
+    searchInput,
+    setSearchInput,
+    handleSort,
+    getSortState,
+    currentPage,
+    lastPage,
+    totalCount,
+    handlePageChange,
+    handlePreviousPage,
+    handleNextPage,
+    handleRefresh,
+  } = useDataTable<IpAddressResource>({
+    fetchFn: ipAddressService.getAll,
+    defaultSortColumn: 'created_at',
+    defaultSortOrder: '-',
+    filters: activeTab === 'me' ? { 'filter[created_by]': 'me' } : {},
+  })
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedIp, setSelectedIp] = useState<IpAddressResource | null>(null)
-  const [data, setData] = useState<IpAddressResource[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [totalCount, setTotalCount] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [sortBy, setSortBy] = useState<string>("createdAt")
-  const [sortOrder, setSortOrder] = useState<'-' | ''>("-")
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const sortParam = `${sortOrder}${sortBy}`
-        const result = await ipAddressService.getAll({ 
-          search: searchQuery,
-          page: currentPage,
-          sort: sortParam
-        })
-        
-        if (result.data && Array.isArray(result.data)) {
-          setData(result.data)
-          
-          if (result.meta) {
-            setTotalCount(result.meta.total)
-            setLastPage(result.meta.last_page)
-          }
-        }
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || err.message || "Failed to fetch data")
-        } else {
-          setError(err instanceof Error ? err.message : "An error occurred")
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [searchQuery, refreshKey, currentPage, sortBy, sortOrder])
-
-  const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1)
-  }
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      // Toggle sort order if same column
-      setSortOrder(sortOrder === '' ? '-' : '')
-    } else {
-      // Set new column and default to ascending
-      setSortBy(column)
-      setSortOrder('')
-    }
-    setCurrentPage(1) // Reset to first page when sorting changes
-  }
 
   const getSortIcon = (column: string) => {
-    if (sortBy !== column) {
+    const state = getSortState(column)
+    if (state === 'none') {
       return <ArrowUpDown className="ml-2 h-4 w-4" />
     }
-    return sortOrder === '' ? 
+    return state === 'asc' ? 
       <ArrowUp className="ml-2 h-4 w-4" /> : 
       <ArrowDown className="ml-2 h-4 w-4" />
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
-
-  const handleNextPage = () => {
-    if (currentPage < lastPage) {
-      setCurrentPage(currentPage + 1)
-    }
   }
 
   const handleEdit = (ip: IpAddressResource) => {
@@ -136,18 +86,15 @@ export default function IpManagementIndexPage() {
       setDeleteDialogOpen(false)
       setSelectedIp(null)
       handleRefresh()
-    } catch (error) {
-      console.error("Failed to delete IP:", error)
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message || "Failed to delete IP address")
-      }
+    } catch (err) {
+      console.error("Failed to delete IP:", err)
     }
   }
 
   const columns: ColumnDef<IpAddressResource>[] = [
     {
       accessorKey: "attributes.value",
-      header: ({ column }) => (
+      header: () => (
         <Button
           variant="ghost"
           onClick={() => handleSort('value')}
@@ -164,7 +111,7 @@ export default function IpManagementIndexPage() {
     },
     {
       accessorKey: "attributes.label",
-      header: ({ column }) => (
+      header: () => (
         <Button
           variant="ghost"
           onClick={() => handleSort('label')}
@@ -209,7 +156,7 @@ export default function IpManagementIndexPage() {
     },
     {
       accessorKey: "attributes.createdAt",
-      header: ({ column }) => (
+      header: () => (
         <Button
           variant="ghost"
           onClick={() => handleSort('created_at')}
@@ -249,11 +196,6 @@ export default function IpManagementIndexPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(ip.attributes.value)}
-              >
-                Copy IP address
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleEdit(ip)}>
                 <Pencil className="mr-2 h-4 w-4" />
@@ -293,24 +235,28 @@ export default function IpManagementIndexPage() {
         </div>
       </div>
 
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'me')}>
+        <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="me">My IP Addresses</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle>IP Addresses</CardTitle>
               <CardDescription>
-                {totalCount > 0 ? `${totalCount} total addresses` : "Loading..."}
+                {isLoading ? "Loading..." : `${totalCount} total addresses`}
               </CardDescription>
             </div>
             <div className="relative w-full md:w-72">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search IP addresses..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
-                }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-8"
               />
             </div>

@@ -6,6 +6,7 @@ interface IpAddressQueryParams {
   page?: number
   per_page?: number
   sort?: string
+  [key: string]: any // Allow any additional params
 }
 
 export const ipAddressService = {
