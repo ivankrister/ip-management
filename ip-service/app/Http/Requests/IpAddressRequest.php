@@ -46,6 +46,21 @@ final class IpAddressRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'data.attributes.value.required' => 'The IP address value is required.',
+            'data.attributes.value.ip' => 'The IP address must be a valid IP address.',
+            'data.attributes.value.max' => 'The IP address value may not be greater than 45 characters.',
+            'data.attributes.value.unique' => 'The IP address value must be unique.',
+            'data.attributes.label.required' => 'The label is required.',
+            'data.attributes.label.string' => 'The label must be a string.',
+            'data.attributes.label.min' => 'The label must be at least 1 character.',
+            'data.attributes.label.max' => 'The label may not be greater than 50 characters.',
+            'data.attributes.comment.string' => 'The comment must be a string.',
+        ];
+    }
+
     public function storeData(): array
     {
 

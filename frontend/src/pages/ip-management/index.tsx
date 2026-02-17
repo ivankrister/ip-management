@@ -38,6 +38,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { IpAddressResource } from '@/types';
 import { CreateIpAddressForm } from './create'
 import { EditIpAddressForm } from './edit'
+import { IpAddressDetail } from './show'
 
 export default function IpManagementIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
@@ -67,6 +68,7 @@ export default function IpManagementIndexPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [showDialogOpen, setShowDialogOpen] = useState(false)
   const [selectedIp, setSelectedIp] = useState<IpAddressResource | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -94,6 +96,11 @@ export default function IpManagementIndexPage() {
     setEditDialogOpen(false)
     setSelectedIp(null)
     handleRefresh()
+  }
+
+  const handleRowClick = (ip: IpAddressResource) => {
+    setSelectedIp(ip)
+    setShowDialogOpen(true)
   }
 
   const handleDelete = (ip: IpAddressResource) => {
@@ -296,6 +303,7 @@ export default function IpManagementIndexPage() {
             data={data}
             isLoading={isLoading}
             error={error}
+            onRowClick={handleRowClick}
           />
           
           {!isLoading && !error && lastPage > 1 && (
@@ -382,6 +390,18 @@ export default function IpManagementIndexPage() {
               onCancel={() => setEditDialogOpen(false)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDialogOpen} onOpenChange={setShowDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>IP Address Details</DialogTitle>
+            <DialogDescription>
+              View complete information about this IP address.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedIp && <IpAddressDetail ipAddress={selectedIp} />}
         </DialogContent>
       </Dialog>
 
