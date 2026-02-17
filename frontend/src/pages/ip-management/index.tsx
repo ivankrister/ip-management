@@ -1,6 +1,8 @@
-import { useState } from "react"
-import { ColumnDef } from "@tanstack/react-table"
+import { useState, useEffect } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal, Plus, Search, RefreshCw, Pencil, Trash2 } from "lucide-react"
+import axios from "axios"
+import { ipAddressService } from "@/services/ip-address.service"
 
 import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
@@ -25,25 +27,60 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { IpAddress } from "@/types"
+import type { IpAddressResource } from '@/types';
 
-export default function IpManagementPage() {
+export default function IpManagementIndexPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedIp, setSelectedIp] = useState<IpAddress | null>(null)
+  const [selectedIp, setSelectedIp] = useState<IpAddressResource | null>(null)
+  const [data, setData] = useState<IpAddressResource[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [totalCount, setTotalCount] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [lastPage, setLastPage] = useState(1)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const result = await ipAddressService.getAll({ search: searchQuery })
+        
+        if (result.data && Array.isArray(result.data)) {
+          setData(result.data)
+          
+          if (result.meta) {
+            setTotalCount(result.meta.total)
+            setCurrentPage(result.meta.current_page)
+            setLastPage(result.meta.last_page)
+          }
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          setError(err.response?.data?.message || err.message || "Failed to fetch data")
+        } else {
+          setError(err instanceof Error ? err.message : "An error occurred")
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [searchQuery, refreshKey])
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1)
   }
 
-  const handleEdit = (ip: IpAddress) => {
+  const handleEdit = (ip: IpAddressResource) => {
     console.log("Edit IP:", ip)
     // TODO: Open edit dialog/modal
   }
 
-  const handleDelete = (ip: IpAddress) => {
+  const handleDelete = (ip: IpAddressResource) => {
     setSelectedIp(ip)
     setDeleteDialogOpen(true)
   }
@@ -52,30 +89,32 @@ export default function IpManagementPage() {
     if (!selectedIp) return
     
     try {
-      // TODO: Add actual delete API call
-      console.log("Deleting IP:", selectedIp)
+      await ipAddressService.delete(selectedIp.id)
       setDeleteDialogOpen(false)
       setSelectedIp(null)
       handleRefresh()
     } catch (error) {
       console.error("Failed to delete IP:", error)
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.message || "Failed to delete IP address")
+      }
     }
   }
 
-  const columns: ColumnDef<IpAddress>[] = [
+  const columns: ColumnDef<IpAddressResource>[] = [
     {
-      accessorKey: "value",
+      accessorKey: "attributes.value",
       header: "IP Address",
       cell: ({ row }) => {
-        const value = row.getValue("value") as string
+        const value = row.original.attributes.value
         return <span className="font-mono font-medium">{value}</span>
       },
     },
     {
-      accessorKey: "label",
+      accessorKey: "attributes.label",
       header: "Label",
       cell: ({ row }) => {
-        const label = row.getValue("label") as string | null
+        const label = row.original.attributes.label
         return label ? (
           <Badge variant="secondary">{label}</Badge>
         ) : (
@@ -84,10 +123,10 @@ export default function IpManagementPage() {
       },
     },
     {
-      accessorKey: "comment",
+      accessorKey: "attributes.comment",
       header: "Comment",
       cell: ({ row }) => {
-        const comment = row.getValue("comment") as string | null
+        const comment = row.original.attributes.comment
         return comment ? (
           <span className="text-sm">{comment}</span>
         ) : (
@@ -96,18 +135,22 @@ export default function IpManagementPage() {
       },
     },
     {
-      accessorKey: "created_by",
+      accessorKey: "included.createdBy.name",
       header: "Created By",
       cell: ({ row }) => {
-        const createdBy = row.getValue("created_by") as number
-        return <span className="text-sm">User #{createdBy}</span>
+        const createdBy = row.original.included?.createdBy
+        return createdBy ? (
+          <span className="text-sm">{createdBy.name}</span>
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        )
       },
     },
     {
-      accessorKey: "createdAt",
+      accessorKey: "attributes.createdAt",
       header: "Created At",
       cell: ({ row }) => {
-        const date = row.getValue("createdAt") as string
+        const date = row.original.attributes.createdAt
         return (
           <span className="text-sm text-muted-foreground">
             {new Date(date).toLocaleDateString("en-US", {
@@ -137,7 +180,7 @@ export default function IpManagementPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(ip.value)}
+                onClick={() => navigator.clipboard.writeText(ip.attributes.value)}
               >
                 Copy IP address
               </DropdownMenuItem>
@@ -203,8 +246,9 @@ export default function IpManagementPage() {
         <CardContent>
           <DataTable
             columns={columns}
-            url={`/api/ip-addresses?search=${searchQuery}&_key=${refreshKey}`}
-            onDataLoaded={(data) => setTotalCount(data.length)}
+            data={data}
+            isLoading={isLoading}
+            error={error}
           />
         </CardContent>
       </Card>
@@ -215,7 +259,7 @@ export default function IpManagementPage() {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete the IP address{" "}
-              <span className="font-mono font-semibold">{selectedIp?.value}</span>.
+              <span className="font-mono font-semibold">{selectedIp?.attributes.value}</span>.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

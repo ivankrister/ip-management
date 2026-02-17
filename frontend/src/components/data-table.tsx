@@ -1,9 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import axios from "axios"
+import type { ColumnDef } from "@tanstack/react-table"
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -20,51 +18,17 @@ import {
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
-  data?: TData[]
-  url?: string
-  onDataLoaded?: (data: TData[]) => void
+  data: TData[]
+  isLoading?: boolean
+  error?: string | null
 }
 
 export function DataTable<TData, TValue>({
   columns,
-  data: initialData,
-  url,
-  onDataLoaded,
+  data,
+  isLoading = false,
+  error = null,
 }: DataTableProps<TData, TValue>) {
-  const [data, setData] = useState<TData[]>(initialData || [])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!url) {
-      if (initialData) {
-        setData(initialData)
-      }
-      return
-    }
-
-    const fetchData = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const response = await axios.get(url)
-        const result = response.data
-        const fetchedData = Array.isArray(result) ? result : result.data || []
-        setData(fetchedData)
-        onDataLoaded?.(fetchedData)
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || err.message || "Failed to fetch data")
-        } else {
-          setError(err instanceof Error ? err.message : "An error occurred")
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [url, initialData, onDataLoaded])
 
   const table = useReactTable({
     data,

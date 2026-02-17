@@ -44,6 +44,31 @@ export interface IpAddress{
   updatedAt: string
 }
 
+export interface IpAddressResource {
+  type: string
+  id: string
+  attributes: IpAddress
+  relationships?: {
+    createdBy: {
+      data: {
+        type: string
+        id: string
+      }
+    }
+  }
+  included?: {
+    createdBy: {
+      id: number
+      name: string
+      email: string
+      user_type: string
+    }
+  }
+  links?: {
+    self: string
+  }
+}
+
 export interface User {
   name: string
   email: string

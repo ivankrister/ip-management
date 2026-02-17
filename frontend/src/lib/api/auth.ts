@@ -1,13 +1,12 @@
 import apiClient from '@/lib/axios';
 import type { User } from '@/types';
-
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
 export interface LoginResponse {
-  token: string;
+  access_token: string;
   user: {
     id: number;
     name: string;
@@ -46,6 +45,7 @@ export const authApi = {
    * Store auth token
    */
   setAuthToken: (token: string) => {
+    console.log('Storing auth token:', token);
     localStorage.setItem('authToken', token);
   },
 

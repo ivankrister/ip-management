@@ -4,6 +4,7 @@ import MainLayout from "@/layouts/MainLayout";
 import AuthLayout from "@/layouts/AuthLayout";
 import Dashboard from "@/pages/Dashboard";
 import { ProtectedRoute, AuthGuard } from "@/components/ProtectedRoute";
+import IpManagementIndexPage from "@/pages/ip-management";
 
 export const router = createBrowserRouter([
   {
@@ -45,7 +46,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "ip-management",
-            element: <div>IP Management Page</div>,
+            element: <IpManagementIndexPage />,
             handle: { title: "IP Address Management" },
           },
           {

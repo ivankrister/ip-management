@@ -7,9 +7,11 @@ export class AuthService {
   static async handleLogin(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
       const response = await authApi.login(credentials);
+
+      console.log('response', response.access_token);
       
       // Store token and user data
-      authApi.setAuthToken(response.token);
+      authApi.setAuthToken(response.access_token);
       localStorage.setItem('user', JSON.stringify(response.user));
       
       return response;
