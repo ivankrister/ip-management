@@ -1,0 +1,65 @@
+import apiClient from '@/lib/axios';
+import type { User } from '@/types';
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    type: string;
+  };
+}
+
+
+export const authApi = {
+  /**
+   * Login with email and password
+   */
+  login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
+    const response = await apiClient.post<LoginResponse>('/login', credentials);
+    return response.data;
+  },
+
+  /**
+   * Get current authenticated user
+   */
+  getUser: async (): Promise<User> => {
+    const response = await apiClient.get<User>('/user');
+    return response.data;
+  },
+
+  /**
+   * Logout and clear auth token
+   */
+  logout: () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+  },
+
+  /**
+   * Store auth token
+   */
+  setAuthToken: (token: string) => {
+    localStorage.setItem('authToken', token);
+  },
+
+  /**
+   * Get stored auth token
+   */
+  getAuthToken: (): string | null => {
+    return localStorage.getItem('authToken');
+  },
+
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem('authToken');
+  },
+};

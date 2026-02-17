@@ -2,8 +2,10 @@ export interface JsonApiIdentifier {
   type: string
   id: string
 }
+export type IncludedMap = Record<string, unknown | null>
 
-export interface JsonApiResource<TAttr, TRel = unknown, TIncluded = unknown> {
+
+export interface JsonApiResource<TAttr, TRel = unknown, TIncluded = IncludedMap> {
   type: string
   id: string
   attributes: TAttr
@@ -13,7 +15,6 @@ export interface JsonApiResource<TAttr, TRel = unknown, TIncluded = unknown> {
     self?: string
   }
 }
-export type IncludedMap = Record<string, unknown | null>
 
 
 export interface JsonApiCollectionResponse<T> {
