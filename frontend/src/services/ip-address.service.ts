@@ -34,7 +34,15 @@ export const ipAddressService = {
     label?: string | null
     comment?: string | null
   }): Promise<{ data: IpAddressResource }> {
-    const response = await apiClient.post('/ip-addresses', data)
+    const response = await apiClient.post('/ip-addresses', {
+        data: {
+            attributes: {
+                value: data.value,
+                label: data.label,
+                comment: data.comment,
+            }
+        }
+    })
     return response.data
   },
 
@@ -49,7 +57,15 @@ export const ipAddressService = {
       comment?: string | null
     }
   ): Promise<{ data: IpAddressResource }> {
-    const response = await apiClient.put(`/ip-addresses/${id}`, data)
+    const response = await apiClient.put(`/ip-addresses/${id}`, {
+        data: {
+            attributes: {
+                value: data.value,
+                label: data.label,
+                comment: data.comment,
+            }
+        }
+    })
     return response.data
   },
 
