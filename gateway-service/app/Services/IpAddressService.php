@@ -28,4 +28,14 @@ final class IpAddressService extends ServiceClient
     {
         return $this->post('api/v1/ip-addresses', $data);
     }
+
+    public function update(int $id, array $data): Response
+    {
+        return $this->put("api/v1/ip-addresses/{$id}", $data);
+    }
+
+    public function destroy(int $id): Response
+    {
+        return $this->delete("api/v1/ip-addresses/{$id}");
+    }
 }

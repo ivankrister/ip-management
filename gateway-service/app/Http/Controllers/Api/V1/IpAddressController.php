@@ -24,4 +24,18 @@ final class IpAddressController extends GatewayController
             return $ipService->store($request->all());
         });
     }
+
+    public function update(IpAddressService $ipService, Request $request, int $id): JsonResponse
+    {
+        return $this->proxyRequest(function () use ($ipService, $request, $id) {
+            return $ipService->update($id, $request->all());
+        });
+    }
+
+    public function destroy(IpAddressService $ipService, int $id): JsonResponse
+    {
+        return $this->proxyRequest(function () use ($ipService, $id) {
+            return $ipService->destroy($id);
+        });
+    }
 }

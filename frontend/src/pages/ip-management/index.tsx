@@ -37,6 +37,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { IpAddressResource } from '@/types';
 import { CreateIpAddressForm } from './create'
+import { EditIpAddressForm } from './edit'
 
 export default function IpManagementIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
@@ -65,7 +66,9 @@ export default function IpManagementIndexPage() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedIp, setSelectedIp] = useState<IpAddressResource | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const getSortIcon = (column: string) => {
     const state = getSortState(column)
@@ -83,25 +86,36 @@ export default function IpManagementIndexPage() {
   }
 
   const handleEdit = (ip: IpAddressResource) => {
-    console.log("Edit IP:", ip)
-    // TODO: Open edit dialog/modal
+    setSelectedIp(ip)
+    setEditDialogOpen(true)
+  }
+
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false)
+    setSelectedIp(null)
+    handleRefresh()
   }
 
   const handleDelete = (ip: IpAddressResource) => {
     setSelectedIp(ip)
+    setDeleteError(null)
     setDeleteDialogOpen(true)
   }
 
   const confirmDelete = async () => {
     if (!selectedIp) return
     
+    setDeleteError(null)
     try {
       await ipAddressService.delete(selectedIp.id)
       setDeleteDialogOpen(false)
       setSelectedIp(null)
       handleRefresh()
-    } catch (err) {
-      console.error("Failed to delete IP:", err)
+    } catch (err: any) {
+      const errorMessage = err.response?.status === 403 
+        ? "You don't have permission to delete this IP address."
+        : err.response?.data?.message || err.message || "Failed to delete IP address"
+      setDeleteError(errorMessage)
     }
   }
 
@@ -353,6 +367,24 @@ export default function IpManagementIndexPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit IP Address</DialogTitle>
+            <DialogDescription>
+              Update the IP address details.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedIp && (
+            <EditIpAddressForm
+              ipAddress={selectedIp}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -363,14 +395,14 @@ export default function IpManagementIndexPage() {
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteError && (
+            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+              {deleteError}
+            </div>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
+             <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} variant="destructive">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
