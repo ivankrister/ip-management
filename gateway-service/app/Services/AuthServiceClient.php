@@ -19,4 +19,18 @@ class AuthServiceClient extends ServiceClient
 
         return $this->post('/api/v1/login', $credentials);
     }
+
+    public function refresh(): Response
+    {
+        $this->addAuthorizationHeader();
+
+        return $this->post('/api/v1/refresh');
+    }
+
+    public function logout(): Response
+    {
+        $this->addAuthorizationHeader();
+
+        return $this->delete('/api/v1/logout');
+    }
 }

@@ -12,11 +12,7 @@ final class IpAddressService extends ServiceClient
     public function __construct(Request $request)
     {
         parent::__construct(config('services.ip.url'));
-
-        $token = $request->bearerToken();
-        if ($token) {
-            $this->defaultHeaders['Authorization'] = 'Bearer '.$token;
-        }
+        $this->addAuthorizationHeader();
     }
 
     public function index(array $queryParams = []): Response

@@ -4,15 +4,26 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-final class AuditLogController
+use App\Http\Controllers\GatewayController;
+use App\Services\AuditLogServiceClient;
+
+final class AuditLogController extends GatewayController
 {
+    public function __construct(
+        private AuditLogServiceClient $auditLogService
+    ) {}
+
     public function index()
     {
-        // This method will be implemented to fetch and return audit logs
+        return $this->proxyRequest(function () {
+            return $this->auditLogService->index(request()->query());
+        });
     }
 
     public function show($id)
     {
-        // This method will be implemented to fetch and return a specific audit log by ID
+        return $this->proxyRequest(function () use ($id) {
+            return $this->auditLogService->show($id);
+        });
     }
 }

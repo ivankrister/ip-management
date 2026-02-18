@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Http\Client\RequestException;
@@ -16,7 +18,40 @@ abstract class ServiceClient
 
     public function __construct(string $baseUrl)
     {
-        $this->baseUrl = rtrim($baseUrl, '/');
+        $this->baseUrl = mb_rtrim($baseUrl, '/');
+    }
+
+    /**
+     * Set timeout for requests
+     */
+    final public function setTimeout(int $seconds): self
+    {
+        $this->timeout = $seconds;
+
+        return $this;
+    }
+
+    /**
+     * Set default headers for all requests
+     */
+    final public function setDefaultHeaders(array $headers): self
+    {
+        $this->defaultHeaders = $headers;
+
+        return $this;
+    }
+
+    /**
+     * Add Authorization header from incoming request
+     */
+    final public function addAuthorizationHeader(): self
+    {
+        $authHeader = request()->header('Authorization');
+        if ($authHeader) {
+            $this->defaultHeaders['Authorization'] = $authHeader;
+        }
+
+        return $this;
     }
 
     /**
@@ -84,7 +119,7 @@ abstract class ServiceClient
             $response = Http::timeout($this->timeout)
                 ->accept('application/json')
                 ->withOptions($options)
-                ->{strtolower($method)}($url);
+                ->{mb_strtolower($method)}($url);
 
             return $response;
         } catch (RequestException $e) {
@@ -97,7 +132,7 @@ abstract class ServiceClient
      */
     protected function buildUrl(string $endpoint): string
     {
-        $endpoint = ltrim($endpoint, '/');
+        $endpoint = mb_ltrim($endpoint, '/');
 
         return "{$this->baseUrl}/{$endpoint}";
     }
@@ -114,25 +149,5 @@ abstract class ServiceClient
         }
 
         return $headers;
-    }
-
-    /**
-     * Set timeout for requests
-     */
-    public function setTimeout(int $seconds): self
-    {
-        $this->timeout = $seconds;
-
-        return $this;
-    }
-
-    /**
-     * Set default headers for all requests
-     */
-    public function setDefaultHeaders(array $headers): self
-    {
-        $this->defaultHeaders = $headers;
-
-        return $this;
     }
 }
