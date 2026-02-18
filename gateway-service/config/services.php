@@ -42,5 +42,8 @@ return [
     'ip' => [
         'url' => env('IP_SERVICE_URL'),
     ],
+    'audit_log' => [
+        'url' => env('AUDIT_LOG_SERVICE_URL'),
+    ],
 
 ];
