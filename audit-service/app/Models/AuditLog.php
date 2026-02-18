@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ActionEnum;
 use Illuminate\Database\Eloquent\Model;
 
 final class AuditLog extends Model
@@ -12,7 +13,6 @@ final class AuditLog extends Model
 
     protected $fillable = [
         'user_id',
-        'session_id',
         'action',
         'entity_type',
         'entity_id',
@@ -24,5 +24,6 @@ final class AuditLog extends Model
     protected $casts = [
         'metadata' => 'array',
         'created_at' => 'datetime',
+        'action' => ActionEnum::class,
     ];
 }
