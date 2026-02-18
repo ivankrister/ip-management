@@ -16,7 +16,7 @@ services:
       - ./docker/mysql-init:/docker-entrypoint-initdb.d
     networks:
       - ip-management-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
@@ -64,6 +64,10 @@ services:
       DB_PASSWORD: laravel
       CACHE_DRIVER: file
       SESSION_DRIVER: file
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PREFIX: ip-management-
     volumes:
       - ./auth-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
@@ -71,6 +75,8 @@ services:
       - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - ip-management-network
@@ -128,8 +134,10 @@ services:
       CACHE_DRIVER: file
       SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
+      QUEUE_CONNECTION: redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PREFIX: ip-management-
     volumes:
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
       - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
@@ -147,7 +155,7 @@ services:
   audit-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.audit
       args:
         SERVICE_DIR: audit-service
     container_name: ip-management-audit-service
@@ -170,6 +178,7 @@ services:
       QUEUE_CONNECTION: redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PREFIX: ip-management-
       AUTH_SERVICE_URL: http://auth-service
     volumes:
       - ./audit-service:/var/www/html

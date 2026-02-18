@@ -72,8 +72,8 @@ RUN chown -R www-data:www-data /var/www/html \
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
 
-# Copy supervisor configuration
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Copy audit-specific supervisor configuration with queue consumer
+COPY docker/supervisord.audit.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose port
 EXPOSE 80

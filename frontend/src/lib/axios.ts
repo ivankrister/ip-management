@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1',
@@ -85,14 +85,14 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as any;
 
     // Only redirect on 401 if we're not already on the login page
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
       
       // Don't try to refresh on login/auth pages or if already retried
-      if (currentPath.includes('/login') || currentPath.includes('/auth') || originalRequest._retry) {
+      if (currentPath.includes('/login') || currentPath.includes('/auth') || originalRequest?._retry) {
         return Promise.reject(error);
       }
 
