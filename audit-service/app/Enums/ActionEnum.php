@@ -10,18 +10,18 @@ enum ActionEnum: string
 {
     case AuthLogin = 'auth.login';
     case AuthLogout = 'auth.logout';
-    case IpAddressCreate = 'ip_address.create';
-    case IpAddressUpdate = 'ip_address.update';
-    case IpAddressDelete = 'ip_address.delete';
+    case IpAddressCreated = 'ip_address.created';
+    case IpAddressUpdated = 'ip_address.updated';
+    case IpAddressDeleted = 'ip_address.deleted';
 
     public function label(): string
     {
         return match ($this) {
             self::AuthLogin => 'User Login',
             self::AuthLogout => 'User Logout',
-            self::IpAddressCreate => 'IP Address Created',
-            self::IpAddressUpdate => 'IP Address Updated',
-            self::IpAddressDelete => 'IP Address Deleted',
+            self::IpAddressCreated => 'IP Address Created',
+            self::IpAddressUpdated => 'IP Address Updated',
+            self::IpAddressDeleted => 'IP Address Deleted',
         };
     }
 
@@ -30,9 +30,9 @@ enum ActionEnum: string
         return match ($this) {
             self::AuthLogin => 'login',
             self::AuthLogout => 'logout',
-            self::IpAddressCreate => 'create',
-            self::IpAddressUpdate => 'update',
-            self::IpAddressDelete => 'delete',
+            self::IpAddressCreated => 'create',
+            self::IpAddressUpdated => 'update',
+            self::IpAddressDeleted => 'delete',
         };
     }
 
@@ -40,8 +40,8 @@ enum ActionEnum: string
     {
         return match ($this) {
             self::AuthLogin, self::AuthLogout => '-',
-            self::IpAddressCreate, self::IpAddressUpdate => $auditLog->metadata['after']['value'],
-            self::IpAddressDelete => $auditLog->metadata['before']['value'],
+            self::IpAddressCreated, self::IpAddressUpdated => $auditLog->metadata['after']['value'],
+            self::IpAddressDeleted => $auditLog->metadata['before']['value'],
         };
     }
 
@@ -50,9 +50,21 @@ enum ActionEnum: string
         return match ($this) {
             self::AuthLogin => 'User logged in',
             self::AuthLogout => 'User logged out',
-            self::IpAddressCreate => 'Created IP address: '.$auditLog->metadata['after']['value'],
-            self::IpAddressUpdate => 'Updated IP address from '.$auditLog->metadata['before']['value'].' to '.$auditLog->metadata['after']['value'],
-            self::IpAddressDelete => 'Deleted IP address: '.$auditLog->metadata['before']['value'],
+            self::IpAddressCreated => 'Created IP address: '.$auditLog->metadata['after']['value'],
+            self::IpAddressUpdated => $this->ipUpdateMessage($auditLog->metadata['before'], $auditLog->metadata['after']),
+            self::IpAddressDeleted => 'Deleted IP address: '.$auditLog->metadata['before']['value'],
         };
+    }
+
+    private function ipUpdateMessage(array $before, array $after): string
+    {
+        if ($before['value'] === $after['value']) {
+            return 'Updated IP address label from '.$before['label'].' to '.$after['label'];
+        }
+        if ($before['label'] === $after['label']) {
+            return 'Updated IP address from '.$before['value'].' to '.$after['value'];
+        }
+
+        return 'Updated IP address from '.$before['value'].' ('.$before['label'].') to '.$after['value'].' ('.$after['label'].')';
     }
 }

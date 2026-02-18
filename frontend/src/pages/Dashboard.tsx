@@ -17,7 +17,9 @@ import {
   RiLoginCircleLine,
   RiLogoutCircleLine
 } from "@remixicon/react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import { auditLogService } from "@/services/audit.service";
+import type { AuditLogResource } from "@/types";
 
 // Mock user role - change this to your actual auth context
 const currentUser = {
@@ -72,73 +74,7 @@ const recentIPs = [
   },
 ];
 
-// Mock audit log data
-const auditLogs = [
-  {
-    id: 1,
-    action: "login",
-    user: "John Doe",
-    details: "User logged in",
-    timestamp: "2026-02-15 14:30:15",
-    ip: null
-  },
-  {
-    id: 2,
-    action: "create",
-    user: "John Doe",
-    details: "Added IP 10.0.0.5 with label 'Development Server'",
-    timestamp: "2026-02-15 14:32:45",
-    ip: "10.0.0.5"
-  },
-  {
-    id: 3,
-    action: "update",
-    user: "Jane Smith",
-    details: "Updated label for IP 192.168.1.20 from 'DB Server' to 'Database Server'",
-    timestamp: "2026-02-15 13:15:22",
-    ip: "192.168.1.20"
-  },
-  {
-    id: 4,
-    action: "delete",
-    user: "Admin User",
-    details: "Deleted IP 172.16.0.10 with label 'Old Server'",
-    timestamp: "2026-02-15 12:05:10",
-    ip: "172.16.0.10"
-  },
-  {
-    id: 5,
-    action: "logout",
-    user: "Mike Johnson",
-    details: "User logged out",
-    timestamp: "2026-02-15 11:45:30",
-    ip: null
-  },
-  {
-    id: 6,
-    action: "create",
-    user: "Mike Johnson",
-    details: "Added IP 192.168.1.30 with label 'Backup Server'",
-    timestamp: "2026-02-15 11:20:18",
-    ip: "192.168.1.30"
-  },
-  {
-    id: 7,
-    action: "login",
-    user: "Mike Johnson",
-    details: "User logged in",
-    timestamp: "2026-02-15 11:18:05",
-    ip: null
-  },
-  {
-    id: 8,
-    action: "update",
-    user: "John Doe",
-    details: "Updated label for IP 192.168.1.10",
-    timestamp: "2026-02-15 10:30:42",
-    ip: "192.168.1.10"
-  },
-];
+
 
 const getActionIcon = (action: string) => {
   switch (action) {
@@ -169,6 +105,21 @@ const getActionBadge = (action: string) => {
 };
 
 export default function Dashboard() {
+  const [auditLogs, setAuditLogs] = useState<AuditLogResource[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    auditLogService.getAll({page: 1, sort: "-created_at" })
+      .then(data => {
+        setAuditLogs(data.data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching audit logs:", error);
+        setLoading(false);
+      });
+  }, []);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -330,121 +281,44 @@ export default function Dashboard() {
           )}
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList>
-              <TabsTrigger value="all">All Activities</TabsTrigger>
-              <TabsTrigger value="ip-changes">IP Changes</TabsTrigger>
-              <TabsTrigger value="auth">Authentication</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all" className="mt-4">
-              <Table>
+          <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px]"></TableHead>
                     <TableHead>Action</TableHead>
-                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Details</TableHead>
                     <TableHead>IP Address</TableHead>
                     <TableHead>Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {auditLogs.map((log) => (
+                  {auditLogs.map((log: AuditLogResource) => (
                     <TableRow key={log.id}>
                       <TableCell>
-                        {getActionIcon(log.action)}
+                        {getActionIcon(log.attributes.type)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getActionBadge(log.action)} className="capitalize">
-                          {log.action}
+                        <Badge variant={getActionBadge(log.attributes.type)} className="capitalize">
+                          {log.attributes.action}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{log.user}</TableCell>
-                      <TableCell className="max-w-[300px]">{log.details}</TableCell>
+                      <TableCell className="font-medium">{log.included?.user.email}</TableCell>
+                      <TableCell className="max-w-[300px] whitespace-normal">{log.attributes.details}</TableCell>
                       <TableCell>
-                        {log.ip ? (
-                          <code className="text-xs bg-muted px-2 py-1 rounded">{log.ip}</code>
+                        {log.attributes.ip_address !== '-' ? (
+                          <code className="text-xs bg-muted px-2 py-1 rounded">{log.attributes.ip_address}</code>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {log.timestamp}
+                        {log.attributes.createdAt}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </TabsContent>
-            <TabsContent value="ip-changes" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]"></TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>IP Address</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {auditLogs.filter(log => ["create", "update", "delete"].includes(log.action)).map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        {getActionIcon(log.action)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getActionBadge(log.action)} className="capitalize">
-                          {log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{log.user}</TableCell>
-                      <TableCell className="max-w-[300px]">{log.details}</TableCell>
-                      <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded">{log.ip}</code>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {log.timestamp}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-            <TabsContent value="auth" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]"></TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {auditLogs.filter(log => ["login", "logout"].includes(log.action)).map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        {getActionIcon(log.action)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getActionBadge(log.action)} className="capitalize">
-                          {log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{log.user}</TableCell>
-                      <TableCell>{log.details}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {log.timestamp}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-          </Tabs>
         </CardContent>
       </Card>
     </div>

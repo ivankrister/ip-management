@@ -20,7 +20,12 @@ final class CreateIpAddressAction
             entityType: 'IpAddress',
             entityId: (string) $ipAddress->id,
             metadata: [
-                'user' => $user->only(['id', 'email', 'name', 'type']),
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'type' => $user->type,
+                ],
                 'after' => $ipAddress->toArray(),
             ],
             context: [

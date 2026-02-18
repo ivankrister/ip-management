@@ -14,7 +14,8 @@ final class UpdateIpAddressAction
         $before = $ipAddress->toArray();
         $result = $ipAddress->update($data);
 
-        if ($result) {
+        $hasChanges = $ipAddress->wasChanged();
+        if ($result && $hasChanges) {
 
             $user = auth()->user();
             PublishAuditEvent::dispatch(

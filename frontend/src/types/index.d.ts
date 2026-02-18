@@ -44,6 +44,25 @@ export interface IpAddress{
   updatedAt: string
 }
 
+export interface AuditLog {
+  action: string
+  type: string
+  details: string | null
+  ip_address: string | null
+  user_id: number | null
+  entity_type: string | null
+  entity_id: string | null
+  createdAt: string
+  metadata: {
+    user: {
+      id: number
+      email: string
+      name: string
+      type: string
+    }
+  } | null
+}
+
 export interface IpAddressResource {
   type: string
   id: string
@@ -62,6 +81,31 @@ export interface IpAddressResource {
   links?: {
     self: string
   }
+}
+
+export interface AuditLogResource {
+  type: string
+  id: string
+  attributes: AuditLog
+  relationships?: {
+    user: {
+      data: {
+        type: string
+        id: string
+      }
+    }
+  }
+  included?: {
+    user: User
+  }
+  links?: {
+    self: string
+  }
+}
+
+export type FailedRequest = {
+  resolve: (token: string) => void
+  reject: (error: Error) => void
 }
 
 export interface User {

@@ -16,22 +16,7 @@ final class LoginAction
         $user = User::where('email', $data['email'])->first();
 
         if (! $user || Hash::check($data['password'], $user->password) === false) {
-            // Audit failed login attempt
-            if ($user) {
-                PublishAuditEvent::dispatch(
-                    userId: $user->id,
-                    sessionId: null,
-                    action: 'auth.login_failed',
-                    entityType: 'User',
-                    entityId: (string) $user->id,
-                    before: null,
-                    after: null,
-                    context: [
-                        'request_ip' => request()->ip(),
-                        'user_agent' => request()->userAgent(),
-                    ]
-                );
-            }
+
             throw new Exception('Invalid credentials');
         }
 
@@ -43,7 +28,12 @@ final class LoginAction
             entityType: 'User',
             entityId: (string) $user->id,
             metadata: [
-                'user' => $user->only(['id', 'email', 'name', 'type']),
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'type' => $user->type->value,
+                ],
             ],
             context: [
                 'request_ip' => request()->ip(),

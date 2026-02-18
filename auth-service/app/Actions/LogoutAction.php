@@ -22,7 +22,12 @@ final class LogoutAction
                 entityType: 'User',
                 entityId: (string) $user->id,
                 metadata: [
-                    'user' => $user->only(['id', 'email', 'name', 'type']),
+                    'user' => [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'name' => $user->name,
+                        'type' => $user->type->value,
+                    ],
                 ],
                 context: [
                     'request_ip' => request()->ip(),

@@ -15,6 +15,7 @@ final class AuditLogController extends GatewayController
 
     public function index()
     {
+
         return $this->proxyRequest(function () {
             return $this->auditLogService->index(request()->query());
         });

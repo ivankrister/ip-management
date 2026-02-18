@@ -25,8 +25,8 @@ final class AuditLogResource extends JsonResource
             'attributes' => [
                 'action' => $this->action->label(),
                 'type' => $this->action->type(),
-                'details' => $this->action->details($this),
-                'ip_address' => $this->action->ipAddress($this),
+                'details' => $this->action->details($this->resource),
+                'ip_address' => $this->action->ipAddress($this->resource),
                 'user_id' => $this->user_id,
                 'entity_type' => $this->entity_type,
                 'entity_id' => $this->entity_id,
