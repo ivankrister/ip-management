@@ -11,7 +11,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
         Route::get('/user', [UserController::class, 'show'])->name('auth.user');
-        Route::get('refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
+        Route::post('refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
         Route::delete('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     });
 });
