@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
-use App\Events\AuditEvent;
+use App\Jobs\PublishAuditEvent;
 use App\Models\IpAddress;
 
 final class CreateIpAddressAction
@@ -12,13 +12,22 @@ final class CreateIpAddressAction
     public function handle(array $data): IpAddress
     {
         $ipAddress = IpAddress::create($data);
+        $user = auth()->user();
 
-        AuditEvent::publish(
+        PublishAuditEvent::dispatch(
             userId: auth()->id(),
             action: 'ip_address.created',
             entityType: 'IpAddress',
             entityId: (string) $ipAddress->id,
-            after: $ipAddress->toArray()
+            metadata: [
+                'user' => $user->only(['id', 'email', 'name', 'type']),
+                'after' => $ipAddress->toArray(),
+            ],
+            context: [
+                'request_ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]
+
         );
 
         return $ipAddress;

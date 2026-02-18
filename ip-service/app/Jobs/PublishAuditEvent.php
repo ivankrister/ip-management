@@ -2,25 +2,26 @@
 
 declare(strict_types=1);
 
-namespace App\Events;
+namespace App\Jobs;
 
-use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-final class AuditEvent implements ShouldQueue
+final class PublishAuditEvent implements ShouldQueue
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
         public readonly int $userId,
-        public readonly ?string $sessionId,
         public readonly string $action,
         public readonly string $entityType,
         public readonly ?string $entityId,
-        public readonly ?array $before,
-        public readonly ?array $after,
+        public readonly array $metadata = [],
         public readonly array $context = []
     ) {}
+
+    public function handle(): void {}
 }

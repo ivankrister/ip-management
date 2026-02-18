@@ -17,12 +17,10 @@ final class PublishAuditEvent implements ShouldQueue
 
     public function __construct(
         public readonly int $userId,
-        public readonly ?string $sessionId,
         public readonly string $action,
         public readonly string $entityType,
         public readonly ?string $entityId,
-        public readonly ?array $before,
-        public readonly ?array $after,
+        public readonly array $metadata = [],
         public readonly array $context = []
     ) {}
 
@@ -31,12 +29,10 @@ final class PublishAuditEvent implements ShouldQueue
         // Persist the audit log when the job is processed
         AuditLog::create([
             'user_id' => $this->userId,
-            'session_id' => $this->sessionId,
             'action' => $this->action,
             'entity_type' => $this->entityType,
             'entity_id' => $this->entityId,
-            'before' => $this->before,
-            'after' => $this->after,
+            'metadata' => $this->metadata,
             'request_ip' => $this->context['request_ip'] ?? null,
             'user_agent' => $this->context['user_agent'] ?? null,
         ]);

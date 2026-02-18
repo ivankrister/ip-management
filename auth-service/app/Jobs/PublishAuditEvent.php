@@ -16,18 +16,12 @@ final class PublishAuditEvent implements ShouldQueue
 
     public function __construct(
         public readonly int $userId,
-        public readonly ?string $sessionId,
         public readonly string $action,
         public readonly string $entityType,
         public readonly ?string $entityId,
-        public readonly ?array $before,
-        public readonly ?array $after,
+        public readonly array $metadata = [],
         public readonly array $context = []
     ) {}
 
-    public function handle(): void
-    {
-        // This job will be picked up by the audit-service queue worker
-        // The audit-service will have a handler for this job that persists the audit log
-    }
+    public function handle(): void {}
 }

@@ -39,12 +39,12 @@ final class LoginAction
 
         PublishAuditEvent::dispatch(
             userId: $user->id,
-            sessionId: auth()->getSession()->getId(),
             action: 'auth.login',
             entityType: 'User',
             entityId: (string) $user->id,
-            before: null,
-            after: null,
+            metadata: [
+                'user' => $user->only(['id', 'email', 'name', 'type']),
+            ],
             context: [
                 'request_ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),

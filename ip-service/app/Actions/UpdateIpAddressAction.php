@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
-use App\Events\AuditEvent;
+use App\Jobs\PublishAuditEvent;
 use App\Models\IpAddress;
 
 final class UpdateIpAddressAction
@@ -15,13 +15,23 @@ final class UpdateIpAddressAction
         $result = $ipAddress->update($data);
 
         if ($result) {
-            AuditEvent::dispatch(
+
+            $user = auth()->user();
+            PublishAuditEvent::dispatch(
                 userId: auth()->id(),
                 action: 'ip_address.updated',
                 entityType: 'IpAddress',
                 entityId: (string) $ipAddress->id,
-                before: $before,
-                after: $ipAddress->fresh()->toArray()
+                metadata: [
+                    'user' => $user->only(['id', 'email', 'name', 'type']),
+                    'before' => $before,
+                    'after' => $ipAddress->fresh()->toArray(),
+                ],
+                context: [
+                    'request_ip' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]
+
             );
         }
 

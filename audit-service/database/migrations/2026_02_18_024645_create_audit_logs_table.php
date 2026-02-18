@@ -17,18 +17,15 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->uuid('session_id')->nullable();
             $table->string('action', 100);
             $table->string('entity_type', 50);
             $table->string('entity_id')->nullable();
-            $table->json('before')->nullable();
-            $table->json('after')->nullable();
+            $table->json('metadata')->nullable();
             $table->ipAddress('request_ip')->nullable();
             $table->string('user_agent')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->index(['user_id', 'created_at']);
             $table->index(['entity_type', 'entity_id']);
-            $table->index(['session_id']);
             $table->index(['action']);
         });
 

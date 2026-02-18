@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
-use App\Events\AuditEvent;
+use App\Jobs\PublishAuditEvent;
 use App\Models\IpAddress;
 
 final class DeleteIpAddressAction
@@ -15,12 +15,21 @@ final class DeleteIpAddressAction
         $result = $ipAddress->delete();
 
         if ($result) {
-            AuditEvent::dispatch(
+            $user = auth()->user();
+            PublishAuditEvent::dispatch(
                 userId: auth()->id(),
                 action: 'ip_address.deleted',
                 entityType: 'IpAddress',
                 entityId: (string) $ipAddress->id,
-                before: $before
+                metadata: [
+                    'user' => $user->only(['id', 'email', 'name', 'type']),
+                    'before' => $before,
+                ],
+                context: [
+                    'request_ip' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]
+
             );
         }
 
