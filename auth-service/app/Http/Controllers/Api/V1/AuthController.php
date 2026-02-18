@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\LoginAction;
 use App\Actions\LogoutAction;
@@ -11,7 +11,7 @@ use App\Http\Requests\LoginRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
-final class AuthController extends Controller
+final class AuthController
 {
     public function login(LoginRequest $request, LoginAction $action): JsonResponse
     {
