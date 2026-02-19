@@ -20,6 +20,7 @@ final class IpAddress extends Model
         'comment',
         'created_by',
         'metadata',
+        'type',
     ];
 
     protected $casts = [

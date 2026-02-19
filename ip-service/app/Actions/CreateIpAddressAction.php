@@ -11,6 +11,12 @@ final class CreateIpAddressAction
 {
     public function handle(array $data): IpAddress
     {
+        $ip = $data['value'];
+        $data['type'] = 'ipv4';
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $data['type'] = 'ipv6';
+        }
+
         $ipAddress = IpAddress::create($data);
         $user = auth()->user();
 

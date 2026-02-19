@@ -26,6 +26,7 @@ final class IpAddressResource extends JsonResource
                 'value' => $this->value,
                 'label' => $this->label,
                 'comment' => $this->comment,
+                'type' => $this->type,
                 'created_by' => $this->created_by,
                 'createdAt' => $this->created_at->format('Y-m-d H:i:s'),
                 'updatedAt' => $this->updated_at->format('Y-m-d H:i:s'),

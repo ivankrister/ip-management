@@ -58,13 +58,32 @@ enum ActionEnum: string
 
     private function ipUpdateMessage(array $before, array $after): string
     {
-        if ($before['value'] === $after['value']) {
-            return 'Updated IP address label from '.$before['label'].' to '.$after['label'];
-        }
-        if ($before['label'] === $after['label']) {
-            return 'Updated IP address from '.$before['value'].' to '.$after['value'];
+        $changes = [];
+
+        // Check for value changes
+        if ($before['value'] !== $after['value']) {
+            $changes[] = 'IP address from '.$before['value'].' to '.$after['value'];
         }
 
-        return 'Updated IP address from '.$before['value'].' ('.$before['label'].') to '.$after['value'].' ('.$after['label'].')';
+        // Check for label changes
+        if ($before['label'] !== $after['label']) {
+            $changes[] = 'label from "'.$before['label'].'" to "'.$after['label'].'"';
+        }
+
+        // Check for comment changes
+        $beforeComment = $before['comment'] ?? null;
+        $afterComment = $after['comment'] ?? null;
+
+        if ($beforeComment !== $afterComment) {
+            if ($beforeComment === null && $afterComment !== null) {
+                $changes[] = 'added comment';
+            } elseif ($beforeComment !== null && $afterComment === null) {
+                $changes[] = 'removed the comment';
+            } else {
+                $changes[] = 'updated the comment';
+            }
+        }
+
+        return '(Updated) '.implode(', ', $changes);
     }
 }

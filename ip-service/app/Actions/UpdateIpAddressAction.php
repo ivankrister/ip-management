@@ -6,11 +6,20 @@ namespace App\Actions;
 
 use App\Jobs\PublishAuditEvent;
 use App\Models\IpAddress;
+use InvalidArgumentException;
 
 final class UpdateIpAddressAction
 {
     public function handle(IpAddress $ipAddress, array $data): bool
     {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $data['type'] = 'ipv4';
+        } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $data['type'] = 'ipv6';
+        } else {
+            throw new InvalidArgumentException("Invalid IP address: $ip");
+        }
+
         $before = $ipAddress->toArray();
         $result = $ipAddress->update($data);
 
