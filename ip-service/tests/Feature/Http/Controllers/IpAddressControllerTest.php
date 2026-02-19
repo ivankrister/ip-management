@@ -31,7 +31,7 @@ describe('IpAddressController', function () {
         it('can list all IP addresses', function () {
             IpAddress::factory()->count(3)->create();
 
-            $response = getJson('/api/v1/ip-addresses');
+            $response = getJson('/api/v1/ip-addresses?filter[created_by]=all');
 
             $response->assertStatus(200)
                 ->assertJsonStructure([
@@ -59,33 +59,21 @@ describe('IpAddressController', function () {
             expect($response->json('data'))->toHaveCount(3);
         });
 
-        it('can filter IP addresses by value', function () {
-            $ipAddress = IpAddress::factory()->create(['value' => '192.168.1.1']);
-            IpAddress::factory()->create(['value' => '10.0.0.1']);
-
-            $response = getJson('/api/v1/ip-addresses?filter[value]=192.168.1.1');
-
-            $response->assertStatus(200);
-            expect($response->json('data'))->toHaveCount(1);
-            expect($response->json('data.0.attributes.value'))->toBe('192.168.1.1');
-        });
-
-        it('can filter IP addresses by label', function () {
-            IpAddress::factory()->create(['label' => 'Production Server']);
-            IpAddress::factory()->create(['label' => 'Development Server']);
-
-            $response = getJson('/api/v1/ip-addresses?filter[label]=Production Server');
-
-            $response->assertStatus(200);
-            expect($response->json('data'))->toHaveCount(1);
-            expect($response->json('data.0.attributes.label'))->toBe('Production Server');
-        });
-
         it('can filter IP addresses by created_by', function () {
             IpAddress::factory()->create(['created_by' => 1]);
             IpAddress::factory()->create(['created_by' => 2]);
 
-            $response = getJson('/api/v1/ip-addresses?filter[created_by]=1');
+            $response = getJson('/api/v1/ip-addresses?filter[created_by]=me');
+
+            $response->assertStatus(200);
+            expect($response->json('data'))->toHaveCount(1);
+        });
+
+        it('can filter by search term', function () {
+            IpAddress::factory()->create(['value' => '192.168.1.1']);
+            IpAddress::factory()->create(['value' => '10.0.0.1']);
+
+            $response = getJson('/api/v1/ip-addresses?filter[search]=192.168');
 
             $response->assertStatus(200);
             expect($response->json('data'))->toHaveCount(1);

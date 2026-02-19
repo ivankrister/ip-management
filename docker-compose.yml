@@ -52,22 +52,8 @@ services:
     ports:
       - "8001:80"
     environment:
-      APP_NAME: "Auth Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8001
-      DB_CONNECTION: mysql
       DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: auth_service
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
-      CACHE_DRIVER: file
-      SESSION_DRIVER: file
-      QUEUE_CONNECTION: redis
       REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PREFIX: ip-management-
     volumes:
       - ./auth-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
@@ -92,12 +78,6 @@ services:
     ports:
       - "8002:80"
     environment:
-      APP_NAME: "Gateway Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8002
-      CACHE_DRIVER: file
-      SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
     volumes:
       - ./gateway-service:/var/www/html
@@ -121,23 +101,9 @@ services:
     ports:
       - "8003:80"
     environment:
-      APP_NAME: "IP Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8003
-      DB_CONNECTION: mysql
       DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: ip_service
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
-      CACHE_DRIVER: file
-      SESSION_DRIVER: file
-      AUTH_SERVICE_URL: http://auth-service
-      QUEUE_CONNECTION: redis
       REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PREFIX: ip-management-
+      AUTH_SERVICE_URL: http://auth-service
     volumes:
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
       - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
@@ -163,22 +129,8 @@ services:
     ports:
       - "8004:80"
     environment:
-      APP_NAME: "Audit Service"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8004
-      DB_CONNECTION: mysql
       DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: audit_service
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
-      CACHE_DRIVER: redis
-      SESSION_DRIVER: file
-      QUEUE_CONNECTION: redis
       REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PREFIX: ip-management-
       AUTH_SERVICE_URL: http://auth-service
     volumes:
       - ./audit-service:/var/www/html

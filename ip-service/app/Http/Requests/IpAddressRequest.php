@@ -22,11 +22,9 @@ final class IpAddressRequest extends FormRequest
             if ($ipAddress && $ipAddress->created_by === $this->user()->id) {
                 return true;
             }
-        } else {
-            return true;
         }
 
-        return false;
+        return $this->route()->getName() === 'ip-addresses.store';
     }
 
     /**

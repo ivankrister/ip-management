@@ -23,5 +23,9 @@ final class PublishAuditEvent implements ShouldQueue
         public readonly array $context = []
     ) {}
 
-    public function handle(): void {}
+    public function handle(): void
+    {
+        // TODO: Implement audit event publishing logic
+        // This could involve sending to a message queue, HTTP API, etc.
+    }
 }

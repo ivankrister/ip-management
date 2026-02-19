@@ -9,10 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 final class User extends Authenticatable
 {
-    /**
-     * @var string
-     */
-    public $type;
+    public string $type;
 
     /**
      * The attributes that are mass assignable.

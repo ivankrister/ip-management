@@ -28,7 +28,7 @@ final class JWTStateless
             $user->id = $payload->get('sub');
             $user->email = $payload->get('email');
             $user->name = $payload->get('name');
-            $user->type = $payload->get('type');
+            $user->type = $payload->get('user_type');
             $user->exists = true; // Mark as existing to prevent save attempts
 
             // Set the authenticated user for both request()->user() and auth()->user()

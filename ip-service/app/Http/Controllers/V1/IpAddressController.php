@@ -10,6 +10,7 @@ use App\Actions\UpdateIpAddressAction;
 use App\Http\Requests\IpAddressRequest;
 use App\Http\Resources\IpAddressResource;
 use App\Models\IpAddress;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -20,19 +21,14 @@ final class IpAddressController
     {
         $ipAddresses = QueryBuilder::for(IpAddress::class)
             ->allowedFilters([
-                AllowedFilter::callback('created_by', function ($query, $value) {
-                    if ($value === 'all') {
-                        return;
-                    }
+                AllowedFilter::callback('created_by', function (Builder $query, string $value): void {
                     if ($value === 'me') {
                         $query->where('created_by', auth()->id());
-
-                        return;
                     }
 
                 }),
-                AllowedFilter::callback('search', function ($query, $value) {
-                    $query->where(function ($q) use ($value) {
+                AllowedFilter::callback('search', function (Builder $query, string $value): void {
+                    $query->where(function (Builder $q) use ($value): void {
                         $q->where('value', 'like', "%{$value}%")
                             ->orWhere('label', 'like', "%{$value}%");
                     });
