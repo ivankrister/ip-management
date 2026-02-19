@@ -39,9 +39,21 @@ export interface IpAddress{
   value: string
   label: string | null
   comment: string | null
+  type: string
   created_by: number
   createdAt: string
   updatedAt: string
+}
+
+export interface IpAddressStats {
+  total: number
+  ipv4Count: number
+  ipv6Count: number
+  recentIpAddresses: IpAddressResource[]
+  last7Days?: {
+    date: string
+    count: number
+  }[]
 }
 
 export interface AuditLog {

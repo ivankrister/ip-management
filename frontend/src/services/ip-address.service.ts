@@ -1,5 +1,5 @@
 import apiClient from '@/lib/axios'
-import type { IpAddressResource, JsonApiCollectionResponse } from '@/types'
+import type { IpAddressResource, IpAddressStats, JsonApiCollectionResponse } from '@/types'
 
 interface IpAddressQueryParams {
   search?: string
@@ -25,6 +25,14 @@ export const ipAddressService = {
     const response = await apiClient.get(`/ip-addresses/${id}`)
     return response.data
   },
+
+    /**
+     * Fetch IP address statistics
+     */
+    async getStats(): Promise<{ data: IpAddressStats }> {
+        const response = await apiClient.get('/ip-addresses/stats')
+        return response.data
+    },
 
   /**
    * Create a new IP address

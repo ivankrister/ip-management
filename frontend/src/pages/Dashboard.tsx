@@ -6,8 +6,6 @@ import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { 
   RiGlobalLine,
-  RiUserLine,
-  RiShieldUserLine,
   RiHistoryLine,
   RiArrowRightLine,
   RiFileListLine,
@@ -19,25 +17,10 @@ import {
 } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import { auditLogService } from "@/services/audit.service";
-import type { AuditLogResource } from "@/types";
-
-// Mock user role - change this to your actual auth context
-const currentUser = {
-  role: "super-admin", // or "user"
-  id: 1,
-  name: "John Doe"
-};
-
-// Mock chart data for IP registrations
-const chartData = [
-  { date: "Feb 09", count: 12 },
-  { date: "Feb 10", count: 15 },
-  { date: "Feb 11", count: 18 },
-  { date: "Feb 12", count: 14 },
-  { date: "Feb 13", count: 22 },
-  { date: "Feb 14", count: 19 },
-  { date: "Feb 15", count: 25 },
-];
+import type { AuditLogResource, IpAddressStats } from "@/types";
+import { ipAddressService } from "@/services/ip-address.service";
+import { useAuth } from "@/hooks/use-auth";
+import { formatDate } from "@/lib/utils";
 
 const chartConfig = {
   count: {
@@ -45,34 +28,6 @@ const chartConfig = {
     color: "hsl(var(--primary))",
   },
 };
-
-// Mock data for recent IP additions
-const recentIPs = [
-  { 
-    id: 1, 
-    ip: "10.0.0.5", 
-    label: "Development Server", 
-    type: "IPv4",
-    addedBy: "John Doe",
-    time: "2 hours ago"
-  },
-  { 
-    id: 2, 
-    ip: "192.168.1.30", 
-    label: "Backup Server", 
-    type: "IPv4",
-    addedBy: "Mike Johnson",
-    time: "5 hours ago"
-  },
-  { 
-    id: 3, 
-    ip: "2001:0db8:85a3::7334", 
-    label: "Mail Server", 
-    type: "IPv6",
-    addedBy: "John Doe",
-    time: "1 day ago"
-  },
-];
 
 
 
@@ -107,9 +62,24 @@ const getActionBadge = (action: string) => {
 export default function Dashboard() {
   const [auditLogs, setAuditLogs] = useState<AuditLogResource[]>([]);
   const [loading, setLoading] = useState(false);
+  const [ipStats, setIpStats] = useState<IpAddressStats>({
+    total: 0,
+    ipv4Count: 0,
+    ipv6Count: 0,
+    last7Days: [],
+    recentIpAddresses: []
+  });
+  const { user} = useAuth();
 
   useEffect(() => {
     setLoading(true);
+    ipAddressService.getStats()
+      .then(data => {
+        setIpStats(data.data);
+      })
+      .catch(error => {
+        console.error("Error fetching IP address stats:", error);
+      });
     auditLogService.getAll({page: 1, sort: "-created_at" })
       .then(data => {
         setAuditLogs(data.data);
@@ -126,7 +96,7 @@ export default function Dashboard() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground">
-          Welcome back, {currentUser.name}! Here's your system overview.
+          Welcome back, {user?.name}! Here's your system overview.
         </p>
       </div>
 
@@ -138,9 +108,9 @@ export default function Dashboard() {
             <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">127</div>
+            <div className="text-2xl font-bold">{ipStats.total}</div>
             <p className="text-xs text-muted-foreground">
-              +12 from last week
+              Total number of IP addresses currently in the system
             </p>
           </CardContent>
         </Card>
@@ -151,9 +121,9 @@ export default function Dashboard() {
             <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">98</div>
+            <div className="text-2xl font-bold">{ipStats.ipv4Count}</div>
             <p className="text-xs text-muted-foreground">
-              77% of total
+              {((ipStats.ipv4Count / ipStats.total) * 100).toFixed(0)}% of total
             </p>
           </CardContent>
         </Card>
@@ -164,9 +134,9 @@ export default function Dashboard() {
             <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">29</div>
+            <div className="text-2xl font-bold">{ipStats.ipv6Count}</div>
             <p className="text-xs text-muted-foreground">
-              23% of total
+              {((ipStats.ipv6Count / ipStats.total) * 100).toFixed(0)}% of total
             </p>
           </CardContent>
         </Card>
@@ -186,7 +156,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[200px] w-full">
-              <AreaChart data={chartData}>
+              <AreaChart data={ipStats.last7Days || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
@@ -215,29 +185,34 @@ export default function Dashboard() {
               <CardTitle>Recent IP Additions</CardTitle>
               <CardDescription>Latest IP addresses added to the system</CardDescription>
             </div>
-            <Button variant="ghost" size="sm">
-              View All
-              <RiArrowRightLine className="ml-1 h-4 w-4" />
-            </Button>
+            {ipStats.total > 3 && (
+              <Button variant="ghost" size="sm">
+                View All
+                <RiArrowRightLine className="ml-1 h-4 w-4" />
+              </Button>
+              )
+            }
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentIPs.map((ip) => (
+              {ipStats.recentIpAddresses.map((ip) => (
                 <div key={ip.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                       <RiGlobalLine className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium font-mono">{ip.ip}</p>
-                      <p className="text-xs text-muted-foreground">{ip.label}</p>
+                      <p className="text-sm font-medium font-mono">{ip.attributes.value}</p>
+                      <p className="text-xs text-muted-foreground">{ip.attributes.label}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant={ip.type === "IPv4" ? "default" : "secondary"} className="mb-1">
-                      {ip.type}
+                    <Badge variant={ip.attributes.type === "ipv4" ? "default" : "secondary"} className="mb-1">
+                      {
+                        ip.attributes.type === "ipv4" ? "IPv4" : "IPv6"
+                      }
                     </Badge>
-                    <p className="text-xs text-muted-foreground">{ip.time}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(ip.attributes.createdAt)}</p>
                   </div>
                 </div>
               ))}
@@ -258,12 +233,10 @@ export default function Dashboard() {
               Real-time tracking of all system activities and changes
             </CardDescription>
           </div>
-          {currentUser.role === "super-admin" && (
             <Button variant="outline">
               <RiFileListLine className="mr-2 h-4 w-4" />
               Full Audit Dashboard
             </Button>
-          )}
         </CardHeader>
         <CardContent>
           <Table>
@@ -298,7 +271,7 @@ export default function Dashboard() {
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {log.attributes.createdAt}
+                        {formatDate(log.attributes.createdAt)}
                       </TableCell>
                     </TableRow>
                   ))}

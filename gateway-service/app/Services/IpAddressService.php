@@ -34,4 +34,9 @@ final class IpAddressService extends ServiceClient
     {
         return $this->delete("api/v1/ip-addresses/{$id}");
     }
+
+    public function stats(): Response
+    {
+        return $this->get('api/v1/ip-addresses/stats');
+    }
 }
