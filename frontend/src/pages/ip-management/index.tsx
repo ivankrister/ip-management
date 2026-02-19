@@ -40,6 +40,7 @@ import { CreateIpAddressForm } from './create'
 import { EditIpAddressForm } from './edit'
 import { IpAddressDetail } from './show'
 import { useAuth } from "@/hooks/use-auth"
+import { formatDate } from "@/lib/utils"
 
 export default function IpManagementIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
@@ -213,13 +214,7 @@ export default function IpManagementIndexPage() {
         const date = row.original.attributes.createdAt
         return (
           <span className="text-sm text-muted-foreground">
-            {new Date(date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {formatDate(date)}
           </span>
         )
       },

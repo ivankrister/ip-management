@@ -5,6 +5,7 @@ import AuthLayout from "@/layouts/AuthLayout";
 import Dashboard from "@/pages/Dashboard";
 import { ProtectedRoute, AuthGuard } from "@/components/ProtectedRoute";
 import IpManagementIndexPage from "@/pages/ip-management";
+import AuditLogsIndexPage from "@/pages/audit-logs";
 
 export const router = createBrowserRouter([
   {
@@ -51,7 +52,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "audit-logs",
-            element: <div>Audit Logs Page</div>,
+            element: <AuditLogsIndexPage />,
             handle: { title: "Audit Logs" },
           },
           {
