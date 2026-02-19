@@ -38,6 +38,13 @@ export class AuthService {
   }
 
   /**
+   * Get user (alias for getCurrentUser)
+   */
+  static getUser() {
+    return this.getCurrentUser();
+  }
+
+  /**
    * Check if user is authenticated
    */
   static isAuthenticated(): boolean {

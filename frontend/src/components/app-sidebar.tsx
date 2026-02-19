@@ -1,9 +1,7 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -14,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { RiDashboardLine, RiListUnordered, RiBarChartLine, RiFolderLine, RiGroupLine, RiCameraLine, RiFileTextLine, RiSettingsLine, RiQuestionLine, RiSearchLine, RiDatabase2Line, RiFileChartLine, RiFileLine, RiCommandLine } from "@remixicon/react"
+import { RiDashboardLine,  RiFileTextLine, RiSettingsLine, RiDatabase2Line, RiCommandLine } from "@remixicon/react"
 import { useAuth } from "@/hooks/use-auth"
 
 const data = {
@@ -46,22 +44,20 @@ const data = {
     },
     
   ],
- 
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: (
-        <RiSettingsLine
-        />
-      ),
-    }  
-  ],
+
   
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 const { user} = useAuth()
+
+  const navMainFiltered = data.navMain.filter(item => {
+    // Only super_admin can access Dashboard and Audit Logs
+    if (item.title === "Dashboard" || item.title === "Audit Logs") {
+      return user?.type === "super_admin"
+    }
+    return true
+  })
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -81,10 +77,10 @@ const { user} = useAuth()
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMainFiltered} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user ? user : { id: 0, name: '', email: '', type: '' }} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

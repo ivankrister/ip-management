@@ -3,7 +3,7 @@ import Login from "@/pages/auth/Login";
 import MainLayout from "@/layouts/MainLayout";
 import AuthLayout from "@/layouts/AuthLayout";
 import Dashboard from "@/pages/Dashboard";
-import { ProtectedRoute, AuthGuard } from "@/components/ProtectedRoute";
+import { ProtectedRoute, AuthGuard, RoleBasedRoute } from "@/components/ProtectedRoute";
 import IpManagementIndexPage from "@/pages/ip-management";
 import AuditLogsIndexPage from "@/pages/audit-logs";
 
@@ -41,24 +41,36 @@ export const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
           {
-            path: "dashboard",
-            element: <Dashboard />,
-            handle: { title: "Dashboard" },
-          },
-          {
             path: "ip-management",
             element: <IpManagementIndexPage />,
             handle: { title: "IP Address Management" },
           },
           {
-            path: "audit-logs",
-            element: <AuditLogsIndexPage />,
-            handle: { title: "Audit Logs" },
-          },
-          {
             path: "settings",
             element: <div>Settings Page</div>,
             handle: { title: "Settings" },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "/",
+    element: <RoleBasedRoute allowedRoles={["super_admin"]} />,
+    children: [
+      {
+        path: "",
+        element: <MainLayout />,
+        children: [
+          {
+            path: "dashboard",
+            element: <Dashboard />,
+            handle: { title: "Dashboard" },
+          },
+          {
+            path: "audit-logs",
+            element: <AuditLogsIndexPage />,
+            handle: { title: "Audit Logs" },
           },
         ],
       },
