@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { RefreshCw } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCw } from "lucide-react"
 import { useDataTable } from "@/hooks/useDataTable"
 import { 
   RiFileListLine,
@@ -50,6 +50,8 @@ const getActionBadge = (action: string) => {
   return variants[action] || "outline";
 };
 
+
+
 export default function AuditLogsIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'ip-changes' | 'auth'>('all')
 
@@ -66,12 +68,24 @@ export default function AuditLogsIndexPage() {
     handlePreviousPage,
     handleNextPage,
     handleRefresh,
+    handleSort,
+    getSortState,
   } = useDataTable<AuditLogResource>({
     fetchFn: auditLogService.getAll,
     defaultSortColumn: 'created_at',
     defaultSortOrder: '-',
     filters: activeTab === 'ip-changes' ? { 'filter[entity_type]': 'IpAddress' } : activeTab === 'auth' ? { 'filter[entity_type]': 'User' } : {},
   })
+
+  const getSortIcon = (column: string) => {
+    const state = getSortState(column)
+    if (state === 'none') {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />
+    }
+    return state === 'asc' ? 
+      <ArrowUp className="ml-2 h-4 w-4" /> : 
+      <ArrowDown className="ml-2 h-4 w-4" />
+  }
 
   const columns: ColumnDef<AuditLogResource>[] = [
     {
@@ -120,7 +134,16 @@ export default function AuditLogsIndexPage() {
     },
     {
       accessorKey: "attributes.createdAt",
-      header: "Timestamp",
+       header: () => (
+        <Button
+          variant="ghost"
+          onClick={() => handleSort('created_at')}
+          className="h-8 px-2 hover:bg-transparent"
+        >
+         Timestamps
+          {getSortIcon('created_at')}
+        </Button>
+      ),
       cell: ({ row }) => {
         return (
           <span className="text-muted-foreground text-sm">
