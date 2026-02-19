@@ -36,7 +36,8 @@ export const authApi = {
   /**
    * Logout and clear auth token
    */
-  logout: () => {
+  logout: async (): Promise<void> => {
+    await apiClient.post('/logout', { _method: 'DELETE' });
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   },

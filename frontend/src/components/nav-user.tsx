@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/sidebar"
 import { RiMore2Line, RiUserLine, RiBankCardLine, RiNotification3Line, RiLogoutBoxLine } from "@remixicon/react"
 import { useInitials } from "@/hooks/use-initials"
+import { useAuth } from "@/hooks/use-auth"
+import { useNavigate } from "react-router-dom"
+import { authApi } from "@/lib/api/auth"
 
 export function NavUser({
   user,
@@ -32,6 +35,21 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const getInitials = useInitials(); 
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout()
+      logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('Logout failed:', error)
+      // Still logout locally even if API call fails
+      logout()
+      navigate('/login')
+    }
+  } 
 
   return (
     <SidebarMenu>
@@ -76,7 +94,7 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <RiLogoutBoxLine
               />
               Log out

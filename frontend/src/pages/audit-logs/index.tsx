@@ -1,4 +1,5 @@
 import { useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { RefreshCw } from "lucide-react"
 import { useDataTable } from "@/hooks/useDataTable"
 import { 
@@ -10,10 +11,10 @@ import {
   RiLogoutCircleLine,
   RiHistoryLine
 } from "@remixicon/react";
+import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { AuditLogResource } from '@/types';
 import { useAuth } from "@/hooks/use-auth"
@@ -50,7 +51,7 @@ const getActionBadge = (action: string) => {
 };
 
 export default function AuditLogsIndexPage() {
-  const [activeTab, setActiveTab] = useState<'all' | 'me'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'ip-changes' | 'auth'>('all')
 
   const { user } = useAuth()
 
@@ -58,10 +59,6 @@ export default function AuditLogsIndexPage() {
     data,
     isLoading,
     error,
-    searchInput,
-    setSearchInput,
-    handleSort,
-    getSortState,
     currentPage,
     lastPage,
     totalCount,
@@ -73,8 +70,66 @@ export default function AuditLogsIndexPage() {
     fetchFn: auditLogService.getAll,
     defaultSortColumn: 'created_at',
     defaultSortOrder: '-',
-    filters: activeTab === 'me' ? { 'filter[created_by]': 'me' } : {},
+    filters: activeTab === 'ip-changes' ? { 'filter[entity_type]': 'IpAddress' } : activeTab === 'auth' ? { 'filter[entity_type]': 'User' } : {},
   })
+
+  const columns: ColumnDef<AuditLogResource>[] = [
+    {
+      accessorKey: "icon",
+      header: "",
+      cell: ({ row }) => {
+        return getActionIcon(row.original.attributes.type)
+      },
+    },
+    {
+      accessorKey: "attributes.action",
+      header: "Action",
+      cell: ({ row }) => {
+        return (
+          <Badge variant={getActionBadge(row.original.attributes.type)} className="capitalize">
+            {row.original.attributes.action}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "included.user.email",
+      header: "Email",
+      cell: ({ row }) => {
+        return <span className="font-medium">{row.original.included?.user?.email}</span>
+      },
+    },
+    {
+      accessorKey: "attributes.details",
+      header: "Details",
+      cell: ({ row }) => {
+        return <span className="max-w-[300px] whitespace-normal">{row.original.attributes.details}</span>
+      },
+    },
+    {
+      accessorKey: "attributes.ip_address",
+      header: "IP Address",
+      cell: ({ row }) => {
+        const ipAddress = row.original.attributes.ip_address
+        return ipAddress !== '-' ? (
+          <code className="text-xs bg-muted px-2 py-1 rounded">{ipAddress}</code>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )
+      },
+    },
+    {
+      accessorKey: "attributes.createdAt",
+      header: "Timestamp",
+      cell: ({ row }) => {
+        return (
+          <span className="text-muted-foreground text-sm">
+            {formatDate(row.original.attributes.createdAt)}
+          </span>
+        )
+      },
+    },
+  ]
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -94,10 +149,11 @@ export default function AuditLogsIndexPage() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'me')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'ip-changes' | 'auth')}>
         <TabsList>
-          <TabsTrigger value="all">All Activities</TabsTrigger>
-          <TabsTrigger value="me">My Activities</TabsTrigger>
+              <TabsTrigger value="all">All Activities</TabsTrigger>
+              <TabsTrigger value="ip-changes">IP Changes</TabsTrigger>
+              <TabsTrigger value="auth">Authentication</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -113,52 +169,12 @@ export default function AuditLogsIndexPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-destructive">Error loading audit logs</div>
-          ) : data.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No audit logs found</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]"></TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>IP Address</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((log: AuditLogResource) => (
-                  <TableRow key={log.id}>
-                    <TableCell>
-                      {getActionIcon(log.attributes.type)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getActionBadge(log.attributes.type)} className="capitalize">
-                        {log.attributes.action}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{log.included?.user.email}</TableCell>
-                    <TableCell className="max-w-[300px] whitespace-normal">{log.attributes.details}</TableCell>
-                    <TableCell>
-                      {log.attributes.ip_address !== '-' ? (
-                        <code className="text-xs bg-muted px-2 py-1 rounded">{log.attributes.ip_address}</code>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDate(log.attributes.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <DataTable
+            columns={columns}
+            data={data}
+            isLoading={isLoading}
+            error={error}
+          />
           
           {!isLoading && !error && lastPage > 1 && (
             <div className="flex items-center justify-between px-2 py-4">

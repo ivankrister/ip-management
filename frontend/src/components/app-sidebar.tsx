@@ -32,7 +32,7 @@ const data = {
       title: "IP Address Management",
       url: "/ip-management",
       icon: (
-        <RiFolderLine
+        <RiDatabase2Line
         />
       ),
     },
@@ -40,7 +40,7 @@ const data = {
       title: "Audit Logs",
       url: "/audit-logs",
       icon: (
-        <RiBarChartLine
+        <RiFileTextLine
         />
       ),
     },
@@ -84,7 +84,7 @@ const { user} = useAuth()
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={user ? user : { id: 0, name: '', email: '', type: '' }} />
       </SidebarFooter>
     </Sidebar>
   )

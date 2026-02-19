@@ -16,7 +16,7 @@ final class AuditLogController
         $auditLogs = QueryBuilder::for(AuditLog::class)
             ->allowedFilters(['user_id', 'action', 'entity_type'])
             ->allowedSorts(['created_at'])
-            ->paginate()
+            ->paginate(10)
             ->appends(request()->query());
 
         return AuditLogResource::collection($auditLogs);
