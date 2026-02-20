@@ -9,32 +9,62 @@ const apiClient = axios.create({
   withCredentials: false,
 });
 
-// Track if a token refresh is in progress
 let isRefreshing = false;
-// Queue of failed requests waiting for token refresh
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (error?: unknown) => void;
-}> = [];
+let refreshPromise: Promise<string> | null = null;
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-const processQueue = (error: AxiosError | null, token: string | null = null) => {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error);
-    } else {
-      promise.resolve(token);
-    }
-  });
+const decodeToken = (token: string): any => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    return null;
+  }
+};
 
-  failedQueue = [];
+const isTokenExpired = (token: string, bufferSeconds: number = 60): boolean => {
+  const decoded = decodeToken(token);
+  if (!decoded?.exp) return true;
+
+  const expirationTime = decoded.exp * 1000;
+  const timeUntilExpiry = expirationTime - Date.now();
+
+  return timeUntilExpiry <= bufferSeconds * 1000;
+};
+
+const getTimeUntilExpiry = (token: string): number => {
+  const storedExpiration = localStorage.getItem('tokenExpiration');
+  if (storedExpiration) {
+    const expirationTime = parseInt(storedExpiration, 10);
+    return Math.max(0, expirationTime - Date.now());
+  }
+
+  const decoded = decodeToken(token);
+  if (!decoded?.exp) return 0;
+
+  return Math.max(0, decoded.exp * 1000 - Date.now());
+};
+
+const clearAuthData = () => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('tokenExpiration');
+  localStorage.removeItem('user');
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
 };
 
 const refreshAuthToken = async (): Promise<string> => {
   const currentToken = localStorage.getItem('authToken');
-  
-  if (!currentToken) {
-    throw new Error('No auth token available');
-  }
+  if (!currentToken) throw new Error('No auth token available');
 
   try {
     const response = await axios.post(
@@ -42,96 +72,137 @@ const refreshAuthToken = async (): Promise<string> => {
       {},
       {
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
           'Authorization': `Bearer ${currentToken}`,
         },
       }
     );
 
-    const { access_token } = response.data;
-    
-    // Store the new token
+    const { access_token, expires_in } = response.data;
     localStorage.setItem('authToken', access_token);
+    
+    if (expires_in) {
+      const expirationTime = Date.now() + (expires_in * 1000);
+      localStorage.setItem('tokenExpiration', expirationTime.toString());
+    }
+    
+    scheduleTokenRefresh(access_token);
 
     return access_token;
   } catch (error) {
-    // If refresh fails, clear everything
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    clearAuthData();
     throw error;
   }
 };
 
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
+const scheduleTokenRefresh = (token: string) => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
 
-    console.log('Attaching auth token to request:', token ? 'Yes' : 'No');
-    if (token) {
+  const timeUntilExpiry = getTimeUntilExpiry(token);
+  if (timeUntilExpiry <= 0) return;
+
+  // Refresh 2 minutes before expiry or at 80% of token lifetime
+  const refreshBuffer = Math.min(2 * 60 * 1000, timeUntilExpiry * 0.2);
+  const refreshTime = timeUntilExpiry - refreshBuffer;
+
+  refreshTimer = setTimeout(async () => {
+    try {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        await refreshAuthToken();
+      }
+    } catch (error) {
+      window.location.href = '/auth/login';
+    } finally {
+      isRefreshing = false;
+    }
+  }, refreshTime);
+};
+
+export const initializeTokenRefresh = () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) return;
+
+  if (isTokenExpired(token, 60)) {
+    refreshAuthToken().catch(() => {
+      window.location.href = '/auth/login';
+    });
+  } else {
+    scheduleTokenRefresh(token);
+  }
+};
+
+export const clearTokenRefresh = () => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+};
+
+apiClient.interceptors.request.use(
+  async (config) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return config;
+
+    if (isTokenExpired(token, 60)) {
+      try {
+        if (refreshPromise) {
+          config.headers.Authorization = `Bearer ${await refreshPromise}`;
+        } else if (!isRefreshing) {
+          isRefreshing = true;
+          refreshPromise = refreshAuthToken();
+          config.headers.Authorization = `Bearer ${await refreshPromise}`;
+        } else {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } finally {
+        isRefreshing = false;
+        refreshPromise = null;
+      }
+    } else {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle errors and token refresh
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
-    // Only redirect on 401 if we're not already on the login page
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
       
-      // Don't try to refresh on login/auth pages or if already retried
       if (currentPath.includes('/login') || currentPath.includes('/auth') || originalRequest?._retry) {
         return Promise.reject(error);
       }
 
-      if (isRefreshing) {
-        // If already refreshing, queue this request
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return apiClient(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        const newToken = await refreshAuthToken();
-        processQueue(null, newToken);
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshPromise = refreshAuthToken();
+        }
         
-        // Retry the original request with new token
+        const newToken = await refreshPromise;
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
         return apiClient(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError as AxiosError, null);
-        
-        // Redirect to login
         window.location.href = '/auth/login';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
+        refreshPromise = null;
       }
     }
 

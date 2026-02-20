@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient, { initializeTokenRefresh, clearTokenRefresh } from '@/lib/axios';
 import type { User } from '@/types';
 export interface LoginCredentials {
   email: string;
@@ -7,6 +7,8 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   access_token: string;
+  token_type: string;
+  expires_in: number; // Token expiration time in seconds
   user: {
     id: number;
     name: string;
@@ -39,15 +41,24 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await apiClient.post('/logout', { _method: 'DELETE' });
     localStorage.removeItem('authToken');
+    localStorage.removeItem('tokenExpiration');
     localStorage.removeItem('user');
+    clearTokenRefresh(); // Clear the automatic refresh timer
   },
 
   /**
-   * Store auth token
+   * Store auth token and initialize automatic refresh
    */
-  setAuthToken: (token: string) => {
+  setAuthToken: (token: string, expiresIn?: number) => {
     console.log('Storing auth token:', token);
     localStorage.setItem('authToken', token);
+    
+    // Store expiration time if provided
+    if (expiresIn) {
+      const expirationTime = Date.now() + (expiresIn * 1000);
+      localStorage.setItem('tokenExpiration', expirationTime.toString());
+    }
+    
   },
 
   /**

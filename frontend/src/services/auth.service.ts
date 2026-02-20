@@ -10,8 +10,8 @@ export class AuthService {
 
       console.log('response', response.access_token);
       
-      // Store token and user data
-      authApi.setAuthToken(response.access_token);
+      // Store token and user data with expiration time
+      authApi.setAuthToken(response.access_token, response.expires_in);
       localStorage.setItem('user', JSON.stringify(response.user));
       
       return response;
