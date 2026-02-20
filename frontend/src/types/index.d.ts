@@ -115,6 +115,15 @@ export interface AuditLogResource {
   }
 }
 
+export interface UserResource {
+  type: string
+  id: string
+  attributes: User
+  links?: {
+    self: string
+  }
+}
+
 export type FailedRequest = {
   resolve: (token: string) => void
   reject: (error: Error) => void
