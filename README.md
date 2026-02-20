@@ -76,6 +76,13 @@ This system consists of the following microservices:
    REDIS_PORT=6379
    QUEUE_CONNECTION=redis
    ```
+   
+   **Note**: Configure default admin credentials in auth-service:
+   ```bash
+   # auth-service/.env
+   DEFAULT_ADMIN_EMAIL="admin@example.com"
+   DEFAULT_ADMIN_PASSWORD="password"
+   ```
 
 4. **Start the services**
    ```bash
@@ -191,6 +198,13 @@ docker compose exec auth-service sh
    REDIS_HOST=redis
    REDIS_PORT=6379
    QUEUE_CONNECTION=redis
+   ```
+   
+   **Note**: Configure default admin credentials in auth-service (change these for production):
+   ```bash
+   # auth-service/.env
+   DEFAULT_ADMIN_EMAIL="admin@yourdomain.com"
+   DEFAULT_ADMIN_PASSWORD="your-secure-password"
    ```
 
 4. **Start the services**
