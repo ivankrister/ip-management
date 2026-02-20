@@ -19,7 +19,7 @@ interface CreateUserFormProps {
 export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [type, setType] = useState<string>("")
+  const [role, setRole] = useState<string>("")
   const [password, setPassword] = useState("")
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,8 +46,9 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
       await userService.create({
         name,
         email,
-        type,
+        role,
         password,
+        confirmation_password: passwordConfirmation,
       })
       onSuccess()
     } catch (err: any) {
@@ -97,15 +98,14 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="type">
-          User Type <span className="text-destructive">*</span>
+          User Role <span className="text-destructive">*</span>
         </Label>
-        <Select value={type} onValueChange={setType} disabled={isSubmitting} required>
+        <Select value={role} onValueChange={setRole} disabled={isSubmitting} required>
           <SelectTrigger>
-            <SelectValue placeholder="Select user type" />
+            <SelectValue placeholder="Select user role" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="user">User</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="super_admin">Super Admin</SelectItem>
           </SelectContent>
         </Select>

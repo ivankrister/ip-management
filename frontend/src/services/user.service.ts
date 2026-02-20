@@ -22,17 +22,19 @@ export const userService = {
    */
   async create(data: {
     email: string
-    type: string
+    role: string
     name: string
     password: string
+    confirmation_password: string 
   }): Promise<{ data: UserResource }> {
     const response = await apiClient.post('/users', {
         data: {
             attributes: {
                 email: data.email,
-                type: data.type,
+                role: data.role,
                 name: data.name,
                 password: data.password,
+                password_confirmation: data.confirmation_password,
             }
         }
     })

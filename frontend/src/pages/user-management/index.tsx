@@ -9,14 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -36,11 +28,8 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { UserResource } from '@/types'
 import { CreateUserForm } from './create'
-import { useAuth } from "@/hooks/use-auth"
-import { formatDate } from "@/lib/utils"
 
 export default function UserManagementIndexPage() {
-  const { user } = useAuth()
 
   const {
     data,
@@ -156,50 +145,15 @@ export default function UserManagementIndexPage() {
       accessorKey: "attributes.type",
       header: "Type",
       cell: ({ row }) => {
-        const type = row.original.attributes.type
+        const role = row.original.attributes.role
         return (
-          <Badge variant={getUserTypeBadgeVariant(type)}>
-            {type.replace('_', ' ')}
+          <Badge variant={getUserTypeBadgeVariant(role)}>
+            <span className="capitalize">{role.replace('_', ' ')}</span>
           </Badge>
         )
       },
     },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const userData = row.original
-
-        // Only super_admin can manage users
-        if (user?.type !== 'super_admin') {
-          return null
-        }
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(event: React.MouseEvent<HTMLDivElement>) => {
-                  event.stopPropagation()
-                  handleDelete(userData)
-                }}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
-      },
-    },
+  
   ]
 
   return (
@@ -215,12 +169,10 @@ export default function UserManagementIndexPage() {
           <Button variant="outline" size="icon" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          {user?.type === 'super_admin' && (
             <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add User
             </Button>
-          )}
         </div>
       </div>
 

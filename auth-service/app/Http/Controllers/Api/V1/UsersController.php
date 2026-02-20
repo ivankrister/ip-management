@@ -38,7 +38,7 @@ final class UsersController
 
     public function store(UserRequest $request, CreateUserAction $action): UserResource
     {
-        $user = $action->handle($request->validated());
+        $user = $action->handle($request->storeData());
 
         return UserResource::make($user);
     }

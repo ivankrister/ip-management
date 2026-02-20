@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Password;
 
 final class UserRequest extends FormRequest
 {
@@ -27,7 +26,7 @@ final class UserRequest extends FormRequest
         return [
             'data.attributes.name' => ['required', 'string', 'max:50'],
             'data.attributes.email' => ['required', 'string', 'email', 'max:100', 'unique:users,email,'.$this->route('user')],
-            'data.attributes.password' => ['required', 'string', 'min:8', Password::defaults()],
+            'data.attributes.password' => ['required', 'string', 'min:8', 'confirmed'],
             'data.attributes.role' => ['required', 'string', 'in:super_admin,user'],
         ];
     }
@@ -46,10 +45,20 @@ final class UserRequest extends FormRequest
             'data.attributes.password.required' => 'The password is required.',
             'data.attributes.password.string' => 'The password must be a string.',
             'data.attributes.password.min' => 'The password must be at least 8 characters.',
-            'data.attributes.password.password' => 'The password does not meet the complexity requirements.',
+            'data.attributes.password.confirmed' => 'The password confirmation does not match.',
             'data.attributes.role.required' => 'The user role is required.',
             'data.attributes.role.string' => 'The user role must be a string.',
             'data.attributes.role.in' => 'The user role must be either super_admin or user.',
+        ];
+    }
+
+    public function storeData(): array
+    {
+        return [
+            'name' => $this->input('data.attributes.name'),
+            'email' => $this->input('data.attributes.email'),
+            'password' => $this->input('data.attributes.password'),
+            'role' => $this->input('data.attributes.role'),
         ];
     }
 }

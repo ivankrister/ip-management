@@ -25,7 +25,7 @@ final class UserResource extends JsonResource
             'attributes' => [
                 'name' => $this->name,
                 'email' => $this->email,
-                'type' => $this->role,
+                'role' => $this->role,
                 'createdAt' => $this->created_at,
                 'updatedAt' => $this->updated_at,
             ],
