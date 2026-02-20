@@ -88,7 +88,7 @@ const { user} = useAuth()
         <NavMain items={navMainFiltered} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        {user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   )

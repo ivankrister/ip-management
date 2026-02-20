@@ -6,7 +6,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -18,20 +17,17 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { RiMore2Line, RiUserLine, RiBankCardLine, RiNotification3Line, RiLogoutBoxLine } from "@remixicon/react"
+import { RiMore2Line, RiLogoutBoxLine } from "@remixicon/react"
 import { useInitials } from "@/hooks/use-initials"
 import { useAuth } from "@/hooks/use-auth"
 import { useNavigate } from "react-router-dom"
 import { authApi } from "@/lib/api/auth"
+import type { User } from "@/types"
 
 export function NavUser({
   user,
 }: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
+  user: User
 }) {
   const { isMobile } = useSidebar()
   const getInitials = useInitials(); 
@@ -61,7 +57,7 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={''} alt={user.name} />
                 <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">

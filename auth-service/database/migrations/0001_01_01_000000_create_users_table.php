@@ -26,10 +26,10 @@ return new class extends Migration
         });
 
         DB::table('users')->insert([
-            'name' => 'Admin User',
-            'email' => env('DEFAULT_ADMIN_EMAIL', 'admin@example.com'),
+            'name' => 'Super Admin User',
+            'email' => config('auth.default_user.email'),
             'role' => 'super_admin',
-            'password' => bcrypt(env('DEFAULT_ADMIN_PASSWORD', 'password')),
+            'password' => bcrypt(config('auth.default_user.password')),
         ]);
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

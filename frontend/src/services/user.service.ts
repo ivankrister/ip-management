@@ -1,5 +1,5 @@
 import apiClient from '@/lib/axios'
-import type { JsonApiCollectionResponse, User, UserResource } from '@/types'
+import type { JsonApiCollectionResponse, UserResource } from '@/types'
 
 interface QueryParams {
   search?: string

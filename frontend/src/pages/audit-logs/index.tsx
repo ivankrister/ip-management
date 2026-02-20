@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { AuditLogResource } from '@/types';
-import { useAuth } from "@/hooks/use-auth"
 import { formatDate } from "@/lib/utils"
 import { auditLogService } from "@/services/audit.service"
 
@@ -55,7 +54,6 @@ const getActionBadge = (action: string) => {
 export default function AuditLogsIndexPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'ip-changes' | 'auth'>('all')
 
-  const { user } = useAuth()
 
   const {
     data,

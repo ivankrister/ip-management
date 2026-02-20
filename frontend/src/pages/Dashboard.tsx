@@ -2,11 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { 
   RiGlobalLine,
-  RiHistoryLine,
   RiArrowRightLine,
   RiFileListLine,
   RiAddCircleLine,
@@ -62,7 +62,7 @@ const getActionBadge = (action: string) => {
 
 export default function Dashboard() {
   const [auditLogs, setAuditLogs] = useState<AuditLogResource[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [ipStats, setIpStats] = useState<IpAddressStats>({
     total: 0,
     ipv4Count: 0,
@@ -70,27 +70,25 @@ export default function Dashboard() {
     last7Days: [],
     recentIpAddresses: []
   });
-  const { user} = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    setLoading(true);
-    ipAddressService.getStats()
-      .then(data => {
-        setIpStats(data.data);
+    Promise.all([
+      ipAddressService.getStats(),
+      auditLogService.getAll({ page: 1, sort: "-created_at" })
+    ])
+      .then(([statsData, logsData]) => {
+        setIpStats(statsData.data);
+        setAuditLogs(logsData.data);
       })
       .catch(error => {
-        console.error("Error fetching IP address stats:", error);
-      });
-    auditLogService.getAll({page: 1, sort: "-created_at" })
-      .then(data => {
-        setAuditLogs(data.data);
-        setLoading(false);
+        console.error("Error fetching dashboard data:", error);
       })
-      .catch(error => {
-        console.error("Error fetching audit logs:", error);
+      .finally(() => {
         setLoading(false);
       });
   }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -103,46 +101,63 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total IP Addresses</CardTitle>
-            <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{ipStats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              Total number of IP addresses currently in the system
-            </p>
-          </CardContent>
-        </Card>
+        {loading ? (
+          <>
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-4 rounded" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-3 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total IP Addresses</CardTitle>
+                <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{ipStats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  Total number of IP addresses currently in the system
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">IPv4 Addresses</CardTitle>
-            <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{ipStats.ipv4Count}</div>
-            <p className="text-xs text-muted-foreground">
-              {((ipStats.ipv4Count / ipStats.total) * 100).toFixed(0)}% of total
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">IPv4 Addresses</CardTitle>
+                <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{ipStats.ipv4Count}</div>
+                <p className="text-xs text-muted-foreground">
+                  {ipStats.total > 0 ? ((ipStats.ipv4Count / ipStats.total) * 100).toFixed(0) : 0}% of total
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">IPv6 Addresses</CardTitle>
-            <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{ipStats.ipv6Count}</div>
-            <p className="text-xs text-muted-foreground">
-              {((ipStats.ipv6Count / ipStats.total) * 100).toFixed(0)}% of total
-            </p>
-          </CardContent>
-        </Card>
-
-        
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">IPv6 Addresses</CardTitle>
+                <RiGlobalLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{ipStats.ipv6Count}</div>
+                <p className="text-xs text-muted-foreground">
+                  {ipStats.total > 0 ? ((ipStats.ipv6Count / ipStats.total) * 100).toFixed(0) : 0}% of total
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Chart and Recent Activity */}
@@ -156,26 +171,32 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full">
-              <AreaChart data={ipStats.last7Days || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tick={{ fontSize: 12 }}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="var(--color-count)"
-                  fill="var(--color-count)"
-                  fillOpacity={0.6}
-                />
-              </AreaChart>
-            </ChartContainer>
+            {loading ? (
+              <div className="h-[200px] flex items-center justify-center">
+                <Skeleton className="h-full w-full" />
+              </div>
+            ) : (
+              <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                <AreaChart data={ipStats.last7Days || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke="var(--color-count)"
+                    fill="var(--color-count)"
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -186,39 +207,58 @@ export default function Dashboard() {
               <CardTitle>Recent IP Additions</CardTitle>
               <CardDescription>Latest IP addresses added to the system</CardDescription>
             </div>
-            {ipStats.total > 3 && (
+            {!loading && ipStats.total > 3 && (
               <Link to="/ip-management">
                 <Button variant="ghost" size="sm">
                   View All
                   <RiArrowRightLine className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
-              )
-            }
+            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {ipStats.recentIpAddresses.map((ip) => (
-                <div key={ip.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                      <RiGlobalLine className="h-4 w-4 text-primary" />
+              {loading ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                      <div className="text-right space-y-2">
+                        <Skeleton className="h-5 w-12" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium font-mono">{ip.attributes.value}</p>
-                      <p className="text-xs text-muted-foreground">{ip.attributes.label}</p>
+                  ))}
+                </>
+              ) : ipStats.recentIpAddresses.length > 0 ? (
+                ipStats.recentIpAddresses.map((ip) => (
+                  <div key={ip.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                        <RiGlobalLine className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium font-mono">{ip.attributes.value}</p>
+                        <p className="text-xs text-muted-foreground">{ip.attributes.label}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={ip.attributes.type === "ipv4" ? "default" : "secondary"} className="mb-1">
+                        {ip.attributes.type === "ipv4" ? "IPv4" : "IPv6"}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">{formatDate(ip.attributes.createdAt)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge variant={ip.attributes.type === "ipv4" ? "default" : "secondary"} className="mb-1">
-                      {
-                        ip.attributes.type === "ipv4" ? "IPv4" : "IPv6"
-                      }
-                    </Badge>
-                    <p className="text-xs text-muted-foreground">{formatDate(ip.attributes.createdAt)}</p>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">No recent IP addresses</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -228,35 +268,47 @@ export default function Dashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <RiHistoryLine className="h-5 w-5" />
-              Audit Logs
-            </CardTitle>
+            <CardTitle>Audit Logs</CardTitle>
             <CardDescription>
               Real-time tracking of all system activities and changes
             </CardDescription>
           </div>
-            <Link to="/audit-logs">
-              <Button variant="outline">
-                <RiFileListLine className="mr-2 h-4 w-4" />
-                Full Audit Dashboard
-              </Button>
-            </Link>
+          <Link to="/audit-logs">
+            <Button variant="outline">
+              <RiFileListLine className="mr-2 h-4 w-4" />
+              Full Audit Dashboard
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent>
-          <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]"></TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>IP Address</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {auditLogs.map((log: AuditLogResource) => (
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-8 w-8 rounded" />
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-40" />
+                  <Skeleton className="h-8 flex-1" />
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-32" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Details</TableHead>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead>Timestamp</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {auditLogs.length > 0 ? (
+                  auditLogs.map((log: AuditLogResource) => (
                     <TableRow key={log.id}>
                       <TableCell>
                         {getActionIcon(log.attributes.type)}
@@ -279,9 +331,17 @@ export default function Dashboard() {
                         {formatDate(log.attributes.createdAt)}
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No audit logs found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

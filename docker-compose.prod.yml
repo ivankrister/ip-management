@@ -1,29 +1,87 @@
 services:
-  mysql:
+  # MySQL Database - Auth Service
+  mysql-auth:
     image: mysql:8.0
-    container_name: ip-management-mysql
+    container_name: ip-management-mysql-auth
     restart: always
     environment:
       MYSQL_DATABASE: auth_service
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${MYSQL_USER:-laravel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-laravel}
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./docker/mysql-init:/docker-entrypoint-initdb.d
+      - mysql-auth-data:/var/lib/mysql
     networks:
       - ip-management-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # MySQL Database - IP Service
+  mysql-ip:
+    image: mysql:8.0
+    container_name: ip-management-mysql-ip
+    restart: always
+    environment:
+      MYSQL_DATABASE: ip_service
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${MYSQL_USER:-laravel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-laravel}
+    volumes:
+      - mysql-ip-data:/var/lib/mysql
+    networks:
+      - ip-management-network
+    command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL Database - Audit Service
+  mysql-audit:
+    image: mysql:8.0
+    container_name: ip-management-mysql-audit
+    restart: always
+    environment:
+      MYSQL_DATABASE: audit_service
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${MYSQL_USER:-laravel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-laravel}
+    volumes:
+      - mysql-audit-data:/var/lib/mysql
+    networks:
+      - ip-management-network
+    command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Shared for event-driven architecture
+  redis:
+    image: redis:7-alpine
+    container_name: ip-management-redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    networks:
+      - ip-management-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth Service
   auth-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_DIR: auth-service
     container_name: ip-management-auth-service
@@ -32,29 +90,31 @@ services:
       APP_NAME: "Auth Service"
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: ${AUTH_SERVICE_URL}
-      APP_KEY: ${AUTH_SERVICE_KEY}
       DB_CONNECTION: mysql
-      DB_HOST: mysql
+      DB_HOST: mysql-auth
       DB_PORT: 3306
       DB_DATABASE: auth_service
-      DB_USERNAME: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      CACHE_DRIVER: file
-      SESSION_DRIVER: file
+      DB_USERNAME: ${MYSQL_USER:-laravel}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-laravel}
+      REDIS_HOST: redis
+      CACHE_DRIVER: database
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
     volumes:
-      - ./auth-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
-      mysql:
+      mysql-auth:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - ip-management-network
 
+  # Gateway Service
   gateway-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_DIR: gateway-service
     container_name: ip-management-gateway-service
@@ -63,23 +123,26 @@ services:
       APP_NAME: "Gateway Service"
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: ${GATEWAY_SERVICE_URL}
-      APP_KEY: ${GATEWAY_SERVICE_KEY}
       CACHE_DRIVER: file
       SESSION_DRIVER: file
       AUTH_SERVICE_URL: http://auth-service
+      IP_SERVICE_URL: http://ip-service
+      AUDIT_SERVICE_URL: http://audit-service
     volumes:
-      - ./gateway-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
-      - auth-service
+      auth-service:
+        condition: service_started
     networks:
       - ip-management-network
+    expose:
+      - "80"
 
+  # IP Service
   ip-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_DIR: ip-service
     container_name: ip-management-ip-service
@@ -88,26 +151,57 @@ services:
       APP_NAME: "IP Service"
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: ${IP_SERVICE_URL}
-      APP_KEY: ${IP_SERVICE_KEY}
       DB_CONNECTION: mysql
-      DB_HOST: mysql
+      DB_HOST: mysql-ip
       DB_PORT: 3306
       DB_DATABASE: ip_service
-      DB_USERNAME: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      CACHE_DRIVER: file
-      SESSION_DRIVER: file
-      AUTH_SERVICE_URL: http://auth-service
+      DB_USERNAME: ${MYSQL_USER:-laravel}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-laravel}
+      REDIS_HOST: redis
+      CACHE_DRIVER: database
+      QUEUE_CONNECTION: redis
     volumes:
-      - ./ip-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
-      mysql:
+      mysql-ip:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - ip-management-network
 
+  # Audit Service
+  audit-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.audit.prod
+      args:
+        SERVICE_DIR: audit-service
+    container_name: ip-management-audit-service
+    restart: always
+    environment:
+      APP_NAME: "Audit Service"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      DB_CONNECTION: mysql
+      DB_HOST: mysql-audit
+      DB_PORT: 3306
+      DB_DATABASE: audit_service
+      DB_USERNAME: ${MYSQL_USER:-laravel}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-laravel}
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
+    depends_on:
+      mysql-audit:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ip-management-network
+
+  # Frontend
   frontend:
     build:
       context: ./frontend
@@ -117,22 +211,34 @@ services:
     networks:
       - ip-management-network
 
+  # Nginx Proxy
   nginx-proxy:
     image: nginx:alpine
     container_name: ip-management-nginx-proxy
     restart: always
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
-      - ./docker/nginx/proxy.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/proxy.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - frontend
       - gateway-service
+      - auth-service
+      - ip-service
+      - audit-service
     networks:
       - ip-management-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
-  mysql-data:
+  mysql-auth-data:
+  mysql-ip-data:
+  mysql-audit-data:
+  redis-data:
 
 networks:
   ip-management-network:

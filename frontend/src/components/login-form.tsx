@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 
-interface LoginFormProps extends React.ComponentProps<"div"> {
+interface LoginFormProps extends Omit<React.ComponentProps<"div">, "onSubmit"> {
   onSubmit: (email: string, password: string) => Promise<void>
   isLoading?: boolean
   error?: string | null

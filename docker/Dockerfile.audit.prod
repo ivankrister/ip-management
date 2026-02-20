@@ -6,54 +6,41 @@ ARG SERVICE_DIR
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies
+# Install system dependencies (minimal for production)
 RUN apk add --no-cache \
     nginx \
     supervisor \
-    git \
     curl \
+    libpng \
+    libzip \
+    zip \
+    oniguruma \
+    mysql-client \
+    && apk add --no-cache --virtual .build-deps \
     libpng-dev \
     libzip-dev \
-    zip \
-    unzip \
     oniguruma-dev \
-    postgresql-dev \
-    mysql-dev \
-    linux-headers \
     $PHPIZE_DEPS \
     && docker-php-ext-install \
     pdo \
     pdo_mysql \
-    pdo_pgsql \
     mbstring \
     zip \
     exif \
     pcntl \
     bcmath \
     gd \
-    opcache
-
-# Install Redis PHP extension
-RUN pecl install redis \
-    && docker-php-ext-enable redis
-
-# Install Xdebug from source (compatible with PHP 8.4)
-RUN apk add --no-cache --virtual .build-deps autoconf g++ make \
-    && cd /tmp \
-    && git clone --depth 1 --branch master https://github.com/xdebug/xdebug.git \
-    && cd xdebug \
-    && phpize \
-    && ./configure \
-    && make \
-    && make install \
-    && docker-php-ext-enable xdebug \
-    && cd / \
-    && rm -rf /tmp/xdebug \
+    opcache \
     && apk del .build-deps
 
-# Copy PHP configuration
+# Install Redis PHP extension
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
+
+# Copy production PHP configuration
 COPY docker/php/php.ini /usr/local/etc/php/php.ini
-COPY docker/php/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -61,8 +48,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy application files from the specific service directory
 COPY ${SERVICE_DIR} .
 
-# Install PHP dependencies
-RUN composer install --no-interaction
+# Install PHP dependencies (production only, optimized)
+RUN composer install --no-dev --no-interaction --optimize-autoloader --no-scripts \
+    && composer dump-autoload --optimize
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -72,11 +60,21 @@ RUN chown -R www-data:www-data /var/www/html \
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
 
-# Copy supervisor configuration
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Copy supervisor configuration with queue worker
+COPY docker/supervisord.audit.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy entrypoint script
+COPY docker/entrypoint.prod.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Remove Composer after installation to reduce image size
+RUN rm /usr/bin/composer
 
 # Expose port
 EXPOSE 80
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

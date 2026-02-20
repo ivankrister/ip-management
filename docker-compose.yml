@@ -73,8 +73,6 @@ services:
     image: redis:7-alpine
     container_name: ip-management-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -94,8 +92,6 @@ services:
         SERVICE_DIR: auth-service
     container_name: ip-management-auth-service
     restart: unless-stopped
-    ports:
-      - "8001:80"
     environment:
       DB_HOST: mysql-auth
       REDIS_HOST: redis
@@ -145,8 +141,6 @@ services:
         SERVICE_DIR: ip-service
     container_name: ip-management-ip-service
     restart: unless-stopped
-    ports:
-      - "8003:80"
     environment:
       DB_HOST: mysql-ip
       REDIS_HOST: redis
@@ -173,8 +167,6 @@ services:
         SERVICE_DIR: audit-service
     container_name: ip-management-audit-service
     restart: unless-stopped
-    ports:
-      - "8004:80"
     environment:
       DB_HOST: mysql-audit
       REDIS_HOST: redis

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, Plus, Search, RefreshCw, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Plus, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { userService } from "@/services/user.service"
 import { useDataTable } from "@/hooks/useDataTable"
 
@@ -8,16 +8,6 @@ import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import {
   Dialog,
   DialogContent,
@@ -52,10 +42,8 @@ export default function UserManagementIndexPage() {
     defaultSortOrder: '-',
   })
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<UserResource | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+
 
   const getSortIcon = (column: string) => {
     const state = getSortState(column)
@@ -72,28 +60,8 @@ export default function UserManagementIndexPage() {
     handleRefresh()
   }
 
-  const handleDelete = (userData: UserResource) => {
-    setSelectedUser(userData)
-    setDeleteError(null)
-    setDeleteDialogOpen(true)
-  }
 
-  const confirmDelete = async () => {
-    if (!selectedUser) return
-    
-    setDeleteError(null)
-    try {
-      // await userService.delete(selectedUser.id)
-      setDeleteDialogOpen(false)
-      setSelectedUser(null)
-      handleRefresh()
-    } catch (err: any) {
-      const errorMessage = err.response?.status === 403 
-        ? "You don't have permission to delete this user."
-        : err.response?.data?.message || err.message || "Failed to delete user"
-      setDeleteError(errorMessage)
-    }
-  }
+
 
   const getUserTypeBadgeVariant = (type: string) => {
     switch (type) {
@@ -273,28 +241,7 @@ export default function UserManagementIndexPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the user{" "}
-              <span className="font-semibold">{selectedUser?.attributes.name}</span>
-              {" "}({selectedUser?.attributes.email}).
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {deleteError && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {deleteError}
-            </div>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} variant="destructive">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
     </div>
   )
 }

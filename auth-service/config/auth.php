@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -116,5 +118,10 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    'default_user' => [
+        'email' => env('DEFAULT_ADMIN_EMAIL', 'admin@example.com'),
+        'password' => env('DEFAULT_ADMIN_PASSWORD', 'password'),
+    ],
 
 ];
