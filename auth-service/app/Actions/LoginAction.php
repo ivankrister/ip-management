@@ -44,7 +44,7 @@ final class LoginAction
         return [
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 5,
+            'expires_in' => auth()->factory()->getTTL() * 60,
             'user' => [
                 'id' => $user->id,
                 'email' => $user->email,

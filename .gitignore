@@ -1,6 +1,10 @@
-# MySQL Data
+#Data
 docker/mysql-data/
 docker/mysql-init/
+docker/redis-data/
+docker/mysql-audit-data/
+docker/mysql-auth-data/
+docker/mysql-ip-data/
 
 # Laravel
 **/vendor/

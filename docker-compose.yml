@@ -1,8 +1,8 @@
 services:
-  # MySQL Database - Only for Auth Service
-  mysql:
+  # MySQL Database - Auth Service
+  mysql-auth:
     image: mysql:8.0
-    container_name: ip-management-mysql
+    container_name: ip-management-mysql-auth
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: auth_service
@@ -12,8 +12,7 @@ services:
     ports:
       - "3308:3306"
     volumes:
-      - ./docker/mysql-data:/var/lib/mysql
-      - ./docker/mysql-init:/docker-entrypoint-initdb.d
+      - ./docker/mysql-data-auth:/var/lib/mysql
     networks:
       - ip-management-network
     command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
@@ -23,7 +22,53 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis - For event-driven architecture
+  # MySQL Database - IP Service
+  mysql-ip:
+    image: mysql:8.0
+    container_name: ip-management-mysql-ip
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ip_service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./docker/mysql-data-ip:/var/lib/mysql
+    networks:
+      - ip-management-network
+    command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL Database - Audit Service
+  mysql-audit:
+    image: mysql:8.0
+    container_name: ip-management-mysql-audit
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: audit_service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./docker/mysql-data-audit:/var/lib/mysql
+    networks:
+      - ip-management-network
+    command: --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Shared for event-driven architecture
   redis:
     image: redis:7-alpine
     container_name: ip-management-redis
@@ -52,7 +97,7 @@ services:
     ports:
       - "8001:80"
     environment:
-      DB_HOST: mysql
+      DB_HOST: mysql-auth
       REDIS_HOST: redis
     volumes:
       - ./auth-service:/var/www/html
@@ -60,13 +105,14 @@ services:
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
       - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
-      mysql:
+      mysql-auth:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - ip-management-network
 
+  # Gateway Service - No database or Redis needed
   gateway-service:
     build:
       context: .
@@ -90,6 +136,7 @@ services:
     networks:
       - ip-management-network
 
+  # IP Service
   ip-service:
     build:
       context: .
@@ -101,7 +148,7 @@ services:
     ports:
       - "8003:80"
     environment:
-      DB_HOST: mysql
+      DB_HOST: mysql-ip
       REDIS_HOST: redis
       AUTH_SERVICE_URL: http://auth-service
     volumes:
@@ -110,7 +157,7 @@ services:
       - ./ip-service:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/http.d/default.conf
     depends_on:
-      mysql:
+      mysql-ip:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -129,7 +176,7 @@ services:
     ports:
       - "8004:80"
     environment:
-      DB_HOST: mysql
+      DB_HOST: mysql-audit
       REDIS_HOST: redis
       AUTH_SERVICE_URL: http://auth-service
     volumes:
@@ -138,7 +185,7 @@ services:
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
       - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
-      mysql:
+      mysql-audit:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -154,7 +201,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:8002
+      VITE_API_URL: http://gateway-service
     volumes:
       - ./frontend:/app
     networks:
