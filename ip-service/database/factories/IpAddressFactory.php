@@ -22,6 +22,7 @@ final class IpAddressFactory extends Factory
             'value' => $this->faker->ipv4(),
             'label' => $this->faker->word(),
             'comment' => $this->faker->sentence(),
+            'type' => random_int(0, 1) === 0 ? 'ipv4' : 'ipv6',
             'created_by' => 1,
             'metadata' => [
                 'user' => [

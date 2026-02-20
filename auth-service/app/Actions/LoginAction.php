@@ -45,7 +45,12 @@ final class LoginAction
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 5,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'user_type' => $user->type->value,
+            ],
         ];
     }
 }

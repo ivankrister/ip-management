@@ -175,6 +175,35 @@ describe('IpAddressController', function () {
             ]);
         });
 
+        it('can detect IPv6 address type', function () {
+            $data = [
+                'data' => [
+                    'attributes' => [
+                        'value' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                        'label' => 'IPv6 Server',
+                    ],
+                ],
+            ];
+
+            $response = postJson('/api/v1/ip-addresses', $data);
+
+            $response->assertStatus(201)
+                ->assertJson([
+                    'data' => [
+                        'attributes' => [
+                            'value' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                            'label' => 'IPv6 Server',
+                        ],
+                    ],
+                ]);
+
+            $this->assertDatabaseHas('ip_addresses', [
+                'value' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                'label' => 'IPv6 Server',
+                'type' => 'ipv6',
+            ]);
+        });
+
         it('validates required value field', function () {
             $data = [
                 'data' => [
@@ -311,6 +340,41 @@ describe('IpAddressController', function () {
             ]);
         });
 
+        it('can update IP address type based on value', function () {
+            $ipAddress = IpAddress::factory()->create([
+                'value' => '192.168.1.100',
+                'label' => 'Old Server',
+                'type' => 'ipv4',
+            ]);
+
+            $data = [
+                'data' => [
+                    'attributes' => [
+                        'value' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                        'label' => 'Updated Server',
+                    ],
+                ],
+            ];
+            $response = putJson("/api/v1/ip-addresses/{$ipAddress->id}", $data);
+            $response->assertStatus(200)
+                ->assertJson([
+                    'data' => [
+                        'type' => 'ip_address',
+                        'id' => (string) $ipAddress->id,
+                        'attributes' => [
+                            'value' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                            'label' => 'Updated Server',
+                        ],
+                    ],
+                ]);
+            $this->assertDatabaseHas('ip_addresses', [
+                'id' => $ipAddress->id,
+                'value' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                'label' => 'Updated Server',
+                'type' => 'ipv6',
+            ]);
+        });
+
         it('validates required fields on update', function () {
             $ipAddress = IpAddress::factory()->create();
 
@@ -425,7 +489,7 @@ describe('IpAddressController', function () {
             $response = deleteJson("/api/v1/ip-addresses/{$ipAddress->id}");
             $response->assertStatus(200);
         });
-        it('can only delete his own IP address if the user is not a super admin', function () {
+        it('cannot delete if the user is not a super admin', function () {
             $user1 = new User;
             $user1->id = 1;
             $user1->type = 'user';
@@ -440,7 +504,7 @@ describe('IpAddressController', function () {
             $response->assertStatus(403);
             actingAs($user1);
             $response = deleteJson("/api/v1/ip-addresses/{$ipAddress->id}");
-            $response->assertStatus(200);
+            $response->assertStatus(403);
         });
     });
 });
