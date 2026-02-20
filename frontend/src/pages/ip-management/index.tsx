@@ -226,9 +226,11 @@ export default function IpManagementIndexPage() {
         const ip = row.original
 
 
-        if(user.type !== 'super_admin' && user.id !== ip.attributes.created_by) {
+        if(user?.type !== 'super_admin' && user?.id !== ip.attributes.created_by) {
           return null
         }
+
+    
 
         return (
           <DropdownMenu>
@@ -248,16 +250,22 @@ export default function IpManagementIndexPage() {
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(event: React.MouseEvent<HTMLDivElement>) => {
-                  event.stopPropagation()
-                  handleDelete(ip)
-                }}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
+              {
+                user.type === 'super_admin' && (
+                    <DropdownMenuItem
+                  onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                    event.stopPropagation()
+                    handleDelete(ip)
+                  }}
+                  className="text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+                )
+
+              }
+              
             </DropdownMenuContent>
           </DropdownMenu>
         )

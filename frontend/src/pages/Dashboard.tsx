@@ -21,6 +21,7 @@ import type { AuditLogResource, IpAddressStats } from "@/types";
 import { ipAddressService } from "@/services/ip-address.service";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDate } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 const chartConfig = {
   count: {
@@ -186,10 +187,12 @@ export default function Dashboard() {
               <CardDescription>Latest IP addresses added to the system</CardDescription>
             </div>
             {ipStats.total > 3 && (
-              <Button variant="ghost" size="sm">
-                View All
-                <RiArrowRightLine className="ml-1 h-4 w-4" />
-              </Button>
+              <Link to="/ip-management">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <RiArrowRightLine className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
               )
             }
           </CardHeader>
@@ -233,10 +236,12 @@ export default function Dashboard() {
               Real-time tracking of all system activities and changes
             </CardDescription>
           </div>
-            <Button variant="outline">
-              <RiFileListLine className="mr-2 h-4 w-4" />
-              Full Audit Dashboard
-            </Button>
+            <Link to="/audit-logs">
+              <Button variant="outline">
+                <RiFileListLine className="mr-2 h-4 w-4" />
+                Full Audit Dashboard
+              </Button>
+            </Link>
         </CardHeader>
         <CardContent>
           <Table>
