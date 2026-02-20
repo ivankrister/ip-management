@@ -186,8 +186,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
+      context: .
+      dockerfile: docker/Dockerfile.frontend
     container_name: ip-management-frontend
     restart: unless-stopped
     ports:
@@ -196,6 +196,7 @@ services:
       VITE_API_URL: http://gateway-service
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     networks:
       - ip-management-network
 
