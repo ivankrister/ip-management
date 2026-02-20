@@ -26,7 +26,7 @@ final class LogoutAction
                         'id' => $user->id,
                         'email' => $user->email,
                         'name' => $user->name,
-                        'type' => $user->type->value,
+                        'role' => $user->role->value,
                     ],
                 ],
                 context: [

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum UserType: string
+enum Role: string
 {
     case SuperAdmin = 'super_admin';
     case User = 'user';

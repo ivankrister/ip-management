@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Password;
 
-class UserRequest extends FormRequest
+final class UserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,7 +28,7 @@ class UserRequest extends FormRequest
             'data.attributes.name' => ['required', 'string', 'max:50'],
             'data.attributes.email' => ['required', 'string', 'email', 'max:100', 'unique:users,email,'.$this->route('user')],
             'data.attributes.password' => ['required', 'string', 'min:8', Password::defaults()],
-            'data.attributes.type' => ['required', 'string', 'in:super_admin,user'],
+            'data.attributes.role' => ['required', 'string', 'in:super_admin,user'],
         ];
     }
 
@@ -45,9 +47,9 @@ class UserRequest extends FormRequest
             'data.attributes.password.string' => 'The password must be a string.',
             'data.attributes.password.min' => 'The password must be at least 8 characters.',
             'data.attributes.password.password' => 'The password does not meet the complexity requirements.',
-            'data.attributes.type.required' => 'The user type is required.',
-            'data.attributes.type.string' => 'The user type must be a string.',
-            'data.attributes.type.in' => 'The user type must be either super_admin or user.',
+            'data.attributes.role.required' => 'The user role is required.',
+            'data.attributes.role.string' => 'The user role must be a string.',
+            'data.attributes.role.in' => 'The user role must be either super_admin or user.',
         ];
     }
 }

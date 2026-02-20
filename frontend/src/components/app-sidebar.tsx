@@ -35,6 +35,14 @@ const data = {
       ),
     },
     {
+      title: "User Management",
+      url: "/user-management",
+      icon: (
+        <RiSettingsLine
+        />
+      ),
+    },
+    {
       title: "Audit Logs",
       url: "/audit-logs",
       icon: (
@@ -53,8 +61,8 @@ const { user} = useAuth()
 
   const navMainFiltered = data.navMain.filter(item => {
     // Only super_admin can access Dashboard and Audit Logs
-    if (item.title === "Dashboard" || item.title === "Audit Logs") {
-      return user?.type === "super_admin"
+    if (item.title === "Dashboard" || item.title === "Audit Logs" || item.title === "User Management") {
+      return user?.role === "super_admin"
     }
     return true
   })

@@ -14,7 +14,7 @@ final class IpAddressRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        if ($this->user()->type === 'super_admin') {
+        if ($this->user()->role === 'super_admin') {
             return true;
         }
         if ($this->route()->getName() === 'ip-addresses.update') {

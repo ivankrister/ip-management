@@ -30,7 +30,7 @@ final class CreateIpAddressAction
                     'id' => $user->id,
                     'email' => $user->email,
                     'name' => $user->name,
-                    'type' => $user->type,
+                    'role' => $user->role,
                 ],
                 'after' => $ipAddress->toArray(),
             ],

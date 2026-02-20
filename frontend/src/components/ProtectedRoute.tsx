@@ -35,7 +35,7 @@ export function RoleBasedRoute({ allowedRoles, redirectTo = "/ip-management" }: 
 
   const user = AuthService.getUser();
   
-  if (!user || !allowedRoles.includes(user.type)) {
+  if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to={redirectTo} replace />;
   }
 

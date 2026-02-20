@@ -6,7 +6,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Enums\UserType;
+use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -26,7 +26,7 @@ final class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
-        'type',
+        'role',
     ];
 
     /**
@@ -59,7 +59,7 @@ final class User extends Authenticatable implements JWTSubject
         return [
             'email' => $this->email,
             'name' => $this->name,
-            'type' => $this->type,
+            'role' => $this->role,
         ];
     }
 
@@ -73,7 +73,7 @@ final class User extends Authenticatable implements JWTSubject
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'type' => UserType::class,
+            'role' => Role::class,
         ];
     }
 }

@@ -27,7 +27,7 @@ final class JWTStateless
             $user->id = $payload->get('sub');
             $user->email = $payload->get('email');
             $user->name = $payload->get('name');
-            $user->type = $payload->get('type');
+            $user->role = $payload->get('role');
             $user->exists = true;
 
             $request->setUserResolver(fn (): User => $user);

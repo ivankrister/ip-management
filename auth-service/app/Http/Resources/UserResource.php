@@ -25,9 +25,9 @@ final class UserResource extends JsonResource
             'attributes' => [
                 'name' => $this->name,
                 'email' => $this->email,
-                'type' => $this->type,
-                'createdAt' => $this->created_at->format('Y-m-d H:i:s'),
-                'updatedAt' => $this->updated_at->format('Y-m-d H:i:s'),
+                'type' => $this->role,
+                'createdAt' => $this->created_at,
+                'updatedAt' => $this->updated_at,
             ],
             'links' => [
                 'self' => route('users.show', ['user' => $this->id]),

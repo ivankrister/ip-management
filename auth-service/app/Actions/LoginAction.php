@@ -32,7 +32,7 @@ final class LoginAction
                     'id' => $user->id,
                     'email' => $user->email,
                     'name' => $user->name,
-                    'user_type' => $user->type->value,
+                    'role' => $user->role->value,
                 ],
             ],
             context: [
@@ -49,7 +49,7 @@ final class LoginAction
                 'id' => $user->id,
                 'email' => $user->email,
                 'name' => $user->name,
-                'user_type' => $user->type->value,
+                'role' => $user->role->value,
             ],
         ];
     }

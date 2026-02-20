@@ -6,6 +6,7 @@ import Dashboard from "@/pages/Dashboard";
 import { ProtectedRoute, AuthGuard, RoleBasedRoute } from "@/components/ProtectedRoute";
 import IpManagementIndexPage from "@/pages/ip-management";
 import AuditLogsIndexPage from "@/pages/audit-logs";
+import UserManagementIndexPage from "@/pages/user-management";
 
 export const router = createBrowserRouter([
   {
@@ -45,11 +46,6 @@ export const router = createBrowserRouter([
             element: <IpManagementIndexPage />,
             handle: { title: "IP Address Management" },
           },
-          {
-            path: "settings",
-            element: <div>Settings Page</div>,
-            handle: { title: "Settings" },
-          },
         ],
       },
     ],
@@ -68,10 +64,16 @@ export const router = createBrowserRouter([
             handle: { title: "Dashboard" },
           },
           {
+            path: "user-management",
+            element: <UserManagementIndexPage />,
+            handle: { title: "User Management" },
+          },
+          {
             path: "audit-logs",
             element: <AuditLogsIndexPage />,
             handle: { title: "Audit Logs" },
           },
+
         ],
       },
     ],

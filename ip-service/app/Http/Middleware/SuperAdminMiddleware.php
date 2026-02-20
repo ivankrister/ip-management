@@ -19,7 +19,7 @@ final class SuperAdminMiddleware
     {
         $user = $request->user();
 
-        if (! $user || $user->type !== 'super_admin') {
+        if (! $user || $user->role !== 'super_admin') {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 

@@ -18,7 +18,7 @@ beforeEach(function () {
     $user->id = 1;
     $user->name = 'Test User';
     $user->email = 'test@example.com';
-    $user->type = 'super_admin';
+    $user->role = 'super_admin';
 
     actingAs($user);
 });
@@ -60,7 +60,7 @@ it('cannot access by non-super admin users', function () {
     $user->id = 2;
     $user->name = 'Regular User';
     $user->email = 'user@example.com';
-    $user->type = 'user';
+    $user->role = 'user';
     actingAs($user);
     $response = getJson('/api/v1/ip-addresses/stats');
     $response->assertStatus(403);

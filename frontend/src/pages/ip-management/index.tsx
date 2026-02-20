@@ -226,7 +226,7 @@ export default function IpManagementIndexPage() {
         const ip = row.original
 
 
-        if(user?.type !== 'super_admin' && user?.id !== ip.attributes.created_by) {
+        if(user?.role !== 'super_admin' && user?.id !== ip.attributes.created_by) {
           return null
         }
 
@@ -251,7 +251,7 @@ export default function IpManagementIndexPage() {
                 Edit
               </DropdownMenuItem>
               {
-                user.type === 'super_admin' && (
+                user.role === 'super_admin' && (
                     <DropdownMenuItem
                   onClick={(event: React.MouseEvent<HTMLDivElement>) => {
                     event.stopPropagation()

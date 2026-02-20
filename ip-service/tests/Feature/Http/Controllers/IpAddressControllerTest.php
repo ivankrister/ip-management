@@ -21,7 +21,7 @@ beforeEach(function () {
     $user->id = 1;
     $user->name = 'Test User';
     $user->email = 'test@example.com';
-    $user->type = 'super_admin';
+    $user->role = 'super_admin';
 
     actingAs($user);
 });
