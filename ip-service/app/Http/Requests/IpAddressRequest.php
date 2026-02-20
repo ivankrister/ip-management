@@ -69,7 +69,7 @@ final class IpAddressRequest extends FormRequest
                     'id' => (string) $this->user()->id,
                     'name' => $this->user()->name,
                     'email' => $this->user()->email,
-                    'type' => $this->user()->type,
+                    'role' => $this->user()->role,
                 ],
             ],
         ];

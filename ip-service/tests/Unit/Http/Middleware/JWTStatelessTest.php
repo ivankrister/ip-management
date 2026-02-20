@@ -29,7 +29,7 @@ describe('JWTStateless', function () {
             ->with('name')
             ->andReturn('John Doe');
         $payload->shouldReceive('get')
-            ->with('user_type')
+            ->with('role')
             ->andReturn('super_admin');
 
         // Mock token
@@ -50,7 +50,7 @@ describe('JWTStateless', function () {
             ->and($this->request->user()->id)->toBe(123)
             ->and($this->request->user()->email)->toBe('john@example.com')
             ->and($this->request->user()->name)->toBe('John Doe')
-            ->and($this->request->user()->type)->toBe('super_admin')
+            ->and($this->request->user()->role)->toBe('super_admin')
             ->and($this->request->user()->exists)->toBeTrue();
     });
 
@@ -67,7 +67,7 @@ describe('JWTStateless', function () {
             ->with('name')
             ->andReturn('Jane Smith');
         $payload->shouldReceive('get')
-            ->with('user_type')
+            ->with('role')
             ->andReturn('user');
 
         // Mock token
@@ -135,7 +135,7 @@ describe('JWTStateless', function () {
             ->with('name')
             ->andReturn('Bob Wilson');
         $payload->shouldReceive('get')
-            ->with('user_type')
+            ->with('role')
             ->andReturn('user');
 
         // Mock token
@@ -175,7 +175,7 @@ describe('JWTStateless', function () {
                 ->with('name')
                 ->andReturn('Test User');
             $payload->shouldReceive('get')
-                ->with('user_type')
+                ->with('role')
                 ->andReturn($userType);
 
             // Mock token
@@ -190,7 +190,7 @@ describe('JWTStateless', function () {
 
             $this->middleware->handle($request, $this->next);
 
-            expect($request->user()->type)->toBe($userType);
+            expect($request->user()->role)->toBe($userType);
         }
     });
 });
